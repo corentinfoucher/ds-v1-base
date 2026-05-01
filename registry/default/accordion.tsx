@@ -294,7 +294,31 @@ const AccordionGroup = forwardRef<HTMLDivElement, AccordionGroupProps>(
                 ).current = node;
             }}
             onMouseEnter={handlers.onMouseEnter}
-            onMouseMove={handlers.onMouseMove}
+            onMouseMove={(e) => {
+              // Suppress proximity hover when cursor is over an expanded
+              // content area (below the item's trigger). This keeps trigger
+              // hover scoped to the trigger row only.
+              const container = containerRef.current;
+              if (container) {
+                const cRect = container.getBoundingClientRect();
+                const layoutH = container.offsetHeight;
+                const visualH = cRect.height;
+                const scale = layoutH > 0 ? visualH / layoutH : 1;
+                const localY =
+                  (e.clientY - cRect.top) / scale + container.scrollTop;
+                for (const [idx, full] of openItemRects) {
+                  const trigger = itemRects[idx];
+                  if (!trigger) continue;
+                  const contentTop = trigger.top + trigger.height;
+                  const contentBottom = full.top + full.height;
+                  if (localY >= contentTop && localY <= contentBottom) {
+                    setActiveIndex(null);
+                    return;
+                  }
+                }
+              }
+              handlers.onMouseMove(e);
+            }}
             onMouseLeave={handlers.onMouseLeave}
             onFocus={(e) => {
               const indexAttr = (e.target as HTMLElement)
@@ -319,7 +343,7 @@ const AccordionGroup = forwardRef<HTMLDivElement, AccordionGroupProps>(
               setActiveIndex(null);
             }}
             className={cn(
-              "relative flex flex-col gap-0.5 w-72 max-w-full select-none",
+              "relative flex flex-col gap-0.5 w-72 max-w-full",
               className
             )}
             {...(htmlProps as HTMLAttributes<HTMLDivElement>)}
@@ -654,7 +678,7 @@ const AccordionTrigger = forwardRef<HTMLButtonElement, AccordionTriggerProps>(
           <AccordionPrimitive.Trigger
             ref={ref}
             className={cn(
-              `relative z-10 flex items-center gap-2.5 ${shape.item} px-3 py-2 w-full cursor-pointer outline-none`,
+              `relative z-10 flex items-center gap-2.5 ${shape.item} px-3 py-2 w-full cursor-pointer outline-none select-none`,
               !groupCtx?.grouped &&
                 "focus-visible:ring-1 focus-visible:ring-[#6B97FF] focus-visible:ring-offset-0",
               className

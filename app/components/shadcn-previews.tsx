@@ -52,35 +52,35 @@ import { Circle, Star, Plus, Heart, Check, Brain } from "lucide-react";
 
 function AccordionPreview() {
   return (
-    <div className="w-full max-w-[420px] mx-auto">
+    <div className="w-full max-w-[420px] mx-auto text-[13px]">
       <Accordion type="single" defaultValue="item-1" collapsible className="w-full">
         <AccordionItem value="item-1">
-          <AccordionTrigger>What is Fluid Functionalism?</AccordionTrigger>
-          <AccordionContent>
+          <AccordionTrigger className="py-2">What is Fluid Functionalism?</AccordionTrigger>
+          <AccordionContent className="text-[13px] pt-1 pb-3">
             A design philosophy where every animation serves a functional purpose — motion is information, not decoration.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
-          <AccordionTrigger>How does proximity hover work?</AccordionTrigger>
-          <AccordionContent>
+          <AccordionTrigger className="py-2">How does proximity hover work?</AccordionTrigger>
+          <AccordionContent className="text-[13px] pt-1 pb-3">
             The closest item to your cursor is highlighted before you click, reducing targeting errors.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
-          <AccordionTrigger>Why spring physics?</AccordionTrigger>
-          <AccordionContent>
+          <AccordionTrigger className="py-2">Why spring physics?</AccordionTrigger>
+          <AccordionContent className="text-[13px] pt-1 pb-3">
             Springs respond naturally to interruption — if a user reverses mid-transition, the animation adapts.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-4">
-          <AccordionTrigger>Is it compatible with shadcn/ui?</AccordionTrigger>
-          <AccordionContent>
+          <AccordionTrigger className="py-2">Is it compatible with shadcn/ui?</AccordionTrigger>
+          <AccordionContent className="text-[13px] pt-1 pb-3">
             Yes. Your existing theme, radius tokens, and setup apply automatically.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-5">
-          <AccordionTrigger>How do I install a component?</AccordionTrigger>
-          <AccordionContent>
+          <AccordionTrigger className="py-2">How do I install a component?</AccordionTrigger>
+          <AccordionContent className="text-[13px] pt-1 pb-3">
             One CLI command — dependencies and shared utilities resolve themselves.
           </AccordionContent>
         </AccordionItem>
@@ -350,31 +350,31 @@ function TablePreview() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="h-auto px-3 py-2">Name</TableHead>
+            <TableHead className="h-auto px-3 py-2">Role</TableHead>
+            <TableHead className="h-auto px-3 py-2">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <TableRow>
-            <TableCell>Alice</TableCell>
-            <TableCell>Engineer</TableCell>
-            <TableCell>Active</TableCell>
+            <TableCell className="p-0 px-3 py-2">Alice</TableCell>
+            <TableCell className="p-0 px-3 py-2">Engineer</TableCell>
+            <TableCell className="p-0 px-3 py-2">Active</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Bob</TableCell>
-            <TableCell>Designer</TableCell>
-            <TableCell>Away</TableCell>
+            <TableCell className="p-0 px-3 py-2">Bob</TableCell>
+            <TableCell className="p-0 px-3 py-2">Designer</TableCell>
+            <TableCell className="p-0 px-3 py-2">Away</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Carol</TableCell>
-            <TableCell>PM</TableCell>
-            <TableCell>Active</TableCell>
+            <TableCell className="p-0 px-3 py-2">Carol</TableCell>
+            <TableCell className="p-0 px-3 py-2">PM</TableCell>
+            <TableCell className="p-0 px-3 py-2">Active</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell>Dan</TableCell>
-            <TableCell>Engineer</TableCell>
-            <TableCell>Offline</TableCell>
+            <TableCell className="p-0 px-3 py-2">Dan</TableCell>
+            <TableCell className="p-0 px-3 py-2">Engineer</TableCell>
+            <TableCell className="p-0 px-3 py-2">Offline</TableCell>
           </TableRow>
         </TableBody>
       </Table>

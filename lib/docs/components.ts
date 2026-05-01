@@ -15,7 +15,7 @@ export const componentList: ComponentEntry[] = [
   { slug: "dialog", name: "Dialog", description: "Modal dialog with smooth enter/exit animations and overlay.", gridSize: "small" },
   { slug: "dropdown", name: "Dropdown", description: "Menu-style dropdown with proximity hover and animated backgrounds.", gridSize: "medium" },
   { slug: "input-copy", name: "InputCopy", description: "Read-only input with copy-to-clipboard button and animated feedback.", isNew: true, gridSize: "small" },
-  { slug: "input-group", name: "InputGroup", description: "Input field group with proximity hover and validation.", gridSize: "medium" },
+  { slug: "input-group", name: "InputGroup", description: "Input field group with proximity hover and validation.", gridSize: "small" },
   { slug: "radio-group", name: "RadioGroup", description: "Radio button group with proximity hover and animated selection.", gridSize: "small" },
   { slug: "select", name: "Select", description: "Animated select menu with bordered/borderless variants and optional icons.", gridSize: "medium" },
   { slug: "slider", name: "Slider", description: "Range slider with step snapping, range mode, and animated thumb.", gridSize: "medium" },
