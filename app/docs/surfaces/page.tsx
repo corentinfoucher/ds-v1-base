@@ -116,7 +116,7 @@ function Playground() {
   return (
     <div className={`flex flex-col w-full border border-border/60 overflow-hidden ${shape.container}`}>
       <div
-        className="flex items-center justify-center px-8 py-16 min-h-[320px]"
+        className="flex items-center justify-center px-8 py-16 min-h-[480px]"
         style={{ backgroundColor: "var(--surface-1)" }}
       >
         <NestedSurfaces substrate={from} layers={layers} />
