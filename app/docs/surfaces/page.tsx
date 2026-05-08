@@ -67,23 +67,19 @@ function SimplePlayground() {
         <PlaygroundCard level={level} />
       </div>
       <div className="flex flex-col gap-3 px-8 py-6 border-t border-border/60 bg-muted/30">
-        <div className="flex items-baseline justify-between gap-4">
-          <span
-            className="text-[13px] text-foreground"
-            style={{ fontVariationSettings: fontWeights.semibold }}
-          >
-            Level
-          </span>
-          <span className="text-[12px] text-muted-foreground font-mono">
-            bg-surface-{level} shadow-surface-{level}
-          </span>
-        </div>
+        <span
+          className="text-[13px] text-foreground"
+          style={{ fontVariationSettings: fontWeights.semibold }}
+        >
+          Surface {level}
+        </span>
         <Slider
           value={level}
           onChange={(v) => setLevel(Array.isArray(v) ? v[0] : v)}
           min={1}
           max={8}
           step={1}
+          showValue={false}
           aria-label="Surface elevation level"
         />
         <div className="flex justify-between text-[10px] text-muted-foreground/60 font-mono px-0.5">
