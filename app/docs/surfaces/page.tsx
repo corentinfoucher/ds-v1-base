@@ -10,6 +10,7 @@ import { Dropdown } from "@/registry/default/dropdown";
 import { MenuItem } from "@/registry/default/menu-item";
 import { useIcon } from "@/registry/default/lib/icon-context";
 import { useThemeContext } from "@/registry/default/lib/theme-context";
+import { BentoCard } from "@/app/components/bento-card";
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
@@ -284,7 +285,6 @@ function UseDarkLink({ children }: { children: ReactNode }) {
 }
 
 function RelativeElevationDemo() {
-  const shape = useShape();
   const Star = useIcon("star");
   const Clock = useIcon("clock");
   const Lock = useIcon("lock");
@@ -304,38 +304,25 @@ function RelativeElevationDemo() {
   );
 
   const scenarios: { substrate: number; label: string; rendered: number }[] = [
-    { substrate: 1, label: "Dropdown on the page", rendered: 3 },
-    { substrate: 3, label: "Dropdown inside a popover", rendered: 5 },
-    { substrate: 5, label: "Dropdown inside a Dialog", rendered: 7 },
+    { substrate: 1, label: "On the page", rendered: 3 },
+    { substrate: 3, label: "Inside a popover", rendered: 5 },
+    { substrate: 5, label: "Inside a Dialog", rendered: 7 },
   ];
 
   return (
-    <div className={`dark bento-card-border border bg-background p-6 overflow-hidden ${shape.container}`}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {scenarios.map(({ substrate, label, rendered }) => (
-          <div key={substrate} className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-2">
-              <span
-                className="text-[12px] text-foreground"
-                style={{ fontVariationSettings: fontWeights.semibold }}
-              >
-                {label}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                substrate {substrate} → surface {rendered}
-              </span>
-            </div>
-            <div
-              className={`flex items-center justify-center p-6 min-h-[180px] ${shape.container}`}
-              style={{ backgroundColor: `var(--surface-${substrate})` }}
-            >
-              <SurfaceProvider value={substrate}>
-                {renderDropdown(`d-${substrate}`)}
-              </SurfaceProvider>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="dark grid grid-cols-1 md:grid-cols-3 gap-4">
+      {scenarios.map(({ substrate, label, rendered }) => (
+        <BentoCard
+          key={substrate}
+          slug=""
+          name={`${label} — substrate ${substrate} → surface ${rendered}`}
+          style={{ backgroundColor: `var(--surface-${substrate})` }}
+        >
+          <SurfaceProvider value={substrate}>
+            {renderDropdown(`d-${substrate}`)}
+          </SurfaceProvider>
+        </BentoCard>
+      ))}
     </div>
   );
 }
