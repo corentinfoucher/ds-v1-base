@@ -1,344 +1,294 @@
 "use client";
 
-import { useState, type ReactElement, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { DocPage, DocSection } from "@/lib/docs/DocPage";
-import { Slider } from "@/registry/default/slider";
 import { fontWeights } from "@/registry/default/lib/font-weight";
 import { useShape } from "@/registry/default/lib/shape-context";
 import { SurfaceProvider } from "@/registry/default/lib/surface-context";
-import { Dropdown } from "@/registry/default/dropdown";
+import { Elevated } from "@/lib/elevated";
+import { Dropdown, useDropdown } from "@/registry/default/dropdown";
 import { MenuItem } from "@/registry/default/menu-item";
-import { ColorPicker, ColorPickerPortalContainer } from "@/registry/default/color-picker";
-import { useIcon } from "@/registry/default/lib/icon-context";
+import {
+  ColorPicker,
+  ColorPickerPortalContainer,
+} from "@/registry/default/color-picker";
+import { useIcon, type IconComponent } from "@/registry/default/lib/icon-context";
 import { useThemeContext } from "@/registry/default/lib/theme-context";
-import { BentoCard } from "@/app/components/bento-card";
+import { surfaceClasses } from "@/registry/default/lib/surface-classes";
+import { cn } from "@/registry/default/lib/utils";
+import { ComponentPreview } from "@/lib/docs/ComponentPreview";
+import { InputCopy } from "@/registry/default/input-copy";
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
-const FORMULAS: Record<number, string> = {
-  1: "Base layer",
-  2: "Surface 1 + 1px drop",
-  3: "Surface 2 + 3px drop",
-  4: "Surface 3 + 6px drop",
-  5: "Surface 4 + 12px drop",
-  6: "Surface 5 + 24px drop",
-  7: "Surface 6 + 48px drop",
-  8: "Surface 7 + 96px drop",
-};
+// ---------------------------------------------------------------------------
+// Code snippets (shown in the Code tab of each ComponentPreview)
+// ---------------------------------------------------------------------------
 
-const ALIASES: Record<number, string | null> = {
-  1: "--background",
-  2: "--muted",
-  3: "--card",
-  4: null,
-  5: null,
-  6: null,
-  7: null,
-  8: null,
-};
+const INSTALL_CMD =
+  "npx shadcn@latest add https://www.fluidfunctionalism.com/r/elevated.json";
 
-const SURFACE_CLASSES: Record<number, string> = {
-  1: "bg-surface-1 shadow-surface-1",
-  2: "bg-surface-2 shadow-surface-2",
-  3: "bg-surface-3 shadow-surface-3",
-  4: "bg-surface-4 shadow-surface-4",
-  5: "bg-surface-5 shadow-surface-5",
-  6: "bg-surface-6 shadow-surface-6",
-  7: "bg-surface-7 shadow-surface-7",
-  8: "bg-surface-8 shadow-surface-8",
-};
+const COLLAPSE_CODE = `// Inside a dialog (substrate 5):
 
-function surfaceClass(level: number) {
-  return SURFACE_CLASSES[level];
+// ❌ Hardcoded at the dialog's level — invisible.
+<div className="bg-surface-5 shadow-surface-3 rounded-3xl p-1">
+  <MenuItem icon={Star} label="Favorites" checked />
+  <MenuItem icon={Clock} label="Recents" />
+  <MenuItem icon={Lock} label="Private" />
+</div>
+
+// ✅ Elevation-aware — lifts to surface-7.
+<Elevated offset={2} shadowLevel={3} className="rounded-3xl p-1">
+  <MenuItem icon={Star} label="Favorites" checked />
+  <MenuItem icon={Clock} label="Recents" />
+  <MenuItem icon={Lock} label="Private" />
+</Elevated>`;
+
+const TOKENS_CSS = `:root, .light {
+  --surface-1: #FAFAFA;
+  --surface-2: #FCFCFC;
+  --surface-3: #FFFFFF;
+  --surface-4: #FFFFFF;
+  --surface-5: #FFFFFF;
+  --surface-6: #FFFFFF;
+  --surface-7: #FFFFFF;
+  --surface-8: #FFFFFF;
+
+  --shadow-color: rgb(0 0 0 / 0.06);
+  --shadow-1: 0 0 0 1px var(--shadow-color);
+  --shadow-2: 0 0 0 1px var(--shadow-color), 0 1px 1px -0.5px var(--shadow-color);
+  /* …doubling drop layers up to --shadow-8 (96px blur) */
 }
 
-function PlaygroundCard({ level }: { level: number }) {
-  const shape = useShape();
-  return (
-    <div
-      className={`w-48 h-48 ${shape.container} ${surfaceClass(level)}`}
-      style={{ transition: "background-color 220ms ease, box-shadow 220ms ease" }}
-    />
-  );
-}
+.dark {
+  --surface-1: #171717;
+  --surface-2: #1E1E1E;
+  --surface-3: #252525;
+  --surface-4: #2C2C2C;
+  --surface-5: #333333;
+  --surface-6: #3A3A3A;
+  --surface-7: #414141;
+  --surface-8: #484848;
 
-function SimplePlayground() {
-  const [level, setLevel] = useState<number>(3);
-  const shape = useShape();
-  return (
-    <div className={`flex flex-col w-full border border-border/60 overflow-hidden ${shape.container}`}>
-      <div
-        className="flex items-center justify-center px-8 py-16 min-h-[280px]"
-        style={{ backgroundColor: "var(--surface-1)" }}
-      >
-        <PlaygroundCard level={level} />
-      </div>
-      <div className="flex flex-col gap-3 px-8 py-6 border-t border-border/60 bg-muted/30">
-        <span
-          className="text-[13px] text-foreground"
-          style={{ fontVariationSettings: fontWeights.semibold }}
-        >
-          Surface {level}
-        </span>
-        <Slider
-          value={level}
-          onChange={(v) => setLevel(Array.isArray(v) ? v[0] : v)}
-          min={1}
-          max={8}
-          step={1}
-          showValue={false}
-          aria-label="Surface elevation level"
-        />
-      </div>
-    </div>
-  );
-}
+  /* shadow recipe per level:
+       inset top highlight + inset ring + outer hairline + stacked drops */
+}`;
 
-function NestedSurfaces({ substrate, layers }: { substrate: number; layers: number }) {
-  const shape = useShape();
-  const stack = Array.from({ length: layers + 1 }, (_, i) => substrate + i);
-  return stack.reduceRight<ReactElement | null>((child, level) => {
+const SUBSTRATE_CODE = `// Substrate flows through React context.
+// Default substrate is 1 (the page background).
+
+<Dropdown />                          // surface-3, on the page
+
+<SurfaceProvider value={3}>           // inside a popover
+  <Dropdown />                        // surface-5
+</SurfaceProvider>
+
+<SurfaceProvider value={5}>           // inside a dialog
+  <Dropdown />                        // surface-7
+</SurfaceProvider>
+
+// Inside any elevated component:
+const substrate = useSurface();       // 1, 3, or 5
+const level = Math.min(substrate + 2, 8);`;
+
+const ELEVATED_SOURCE = `import { useSurface, SurfaceProvider } from "@/lib/surface-context";
+import { surfaceClasses } from "@/lib/surface-classes";
+
+const Elevated = forwardRef<HTMLDivElement, ElevatedProps>(
+  ({ offset, shadowLevel, className, children, ...props }, ref) => {
+    const substrate = useSurface();
+    const level = Math.min(substrate + offset, 8);
     return (
-      <div
-        key={level}
-        className={`${shape.container} ${surfaceClass(level)} p-5`}
-        style={{ transition: "background-color 220ms ease, box-shadow 220ms ease" }}
-      >
-        {child}
-      </div>
-    );
-  }, null);
-}
-
-function Playground() {
-  const [range, setRange] = useState<[number, number]>([1, 3]);
-  const [from, to] = range;
-  const layers = to - from;
-  const shape = useShape();
-
-  const handleRange = (v: number | [number, number]) => {
-    if (Array.isArray(v)) setRange(v);
-  };
-
-  return (
-    <div className={`flex flex-col w-full border border-border/60 overflow-hidden ${shape.container}`}>
-      <div
-        className="flex items-center justify-center px-8 py-16 min-h-[480px]"
-        style={{ backgroundColor: "var(--surface-1)" }}
-      >
-        <NestedSurfaces substrate={from} layers={layers} />
-      </div>
-      <div className="flex flex-col gap-3 px-8 py-6 border-t border-border/60 bg-muted/30">
-        <span
-          className="text-[13px] text-foreground"
-          style={{ fontVariationSettings: fontWeights.semibold }}
+      <SurfaceProvider value={level}>
+        <div
+          ref={ref}
+          className={cn(surfaceClasses(level, shadowLevel ?? level), className)}
+          {...props}
         >
-          Stack {from} - {to}
-        </span>
-        <Slider
-          value={range}
-          onChange={handleRange}
-          min={1}
-          max={8}
-          step={1}
-          showValue={false}
-          aria-label="Bottom and top of the surface stack"
-        />
-      </div>
-    </div>
-  );
-}
+          {children}
+        </div>
+      </SurfaceProvider>
+    );
+  }
+);`;
 
-function LadderRow({ level }: { level: number }) {
+const COLOR_PICKER_CODE = `<ColorPicker defaultValue="#6B97FF" />
+
+// FormatDropdown sits inside the picker panel (substrate 3),
+// so it lifts to surface-5 automatically.`;
+
+const INVITE_DIALOG_CODE = `<Dialog open>
+  <DialogContent>
+    {/* DialogContent provides SurfaceProvider value={5} */}
+    <RoleSelectTrigger />
+    <Dropdown>                        {/* lifts to surface-7 */}
+      <RoleItem label="Workspace owner" />
+      <RoleItem label="Member" checked />
+      <RoleItem label="Restricted member" />
+    </Dropdown>
+  </DialogContent>
+</Dialog>`;
+
+// ---------------------------------------------------------------------------
+// Tokens — compact ladder + CSS code
+// ---------------------------------------------------------------------------
+
+function SurfaceChip({ level }: { level: number }) {
   const shape = useShape();
-  const alias = ALIASES[level];
   return (
-    <div className="flex items-center gap-6 py-4">
+    <div className="flex flex-col items-center gap-2 shrink-0">
       <div
-        className={`shrink-0 w-24 h-24 ${shape.container} ${surfaceClass(level)}`}
+        className={cn("w-14 h-14", shape.container, surfaceClasses(level))}
         aria-hidden
       />
-      <div className="flex flex-col gap-1 min-w-0">
-        <span
-          className="text-[14px] text-foreground"
-          style={{ fontVariationSettings: fontWeights.semibold }}
-        >
-          Surface {level}
-        </span>
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-muted-foreground/80 font-mono">
-          <span>{FORMULAS[level]}</span>
-          {alias && <span className="text-muted-foreground/60">aliased by {alias}</span>}
+      <span className="text-[11px] text-muted-foreground font-mono">
+        {level}
+      </span>
+    </div>
+  );
+}
+
+function TokensDemo() {
+  return (
+    <ComponentPreview code={TOKENS_CSS}>
+      <div className="flex flex-col gap-4 w-full">
+        <div className="dark flex flex-col gap-2">
+          <span
+            className="text-[11px] text-muted-foreground tracking-wider"
+            style={{ fontVariationSettings: fontWeights.semibold }}
+          >
+            Dark
+          </span>
+          <div className="flex gap-3 rounded-2xl bg-background p-4 overflow-x-auto">
+            {LEVELS.map((n) => (
+              <SurfaceChip key={n} level={n} />
+            ))}
+          </div>
+        </div>
+        <div className="light flex flex-col gap-2">
+          <span
+            className="text-[11px] text-muted-foreground tracking-wider"
+            style={{ fontVariationSettings: fontWeights.semibold }}
+          >
+            Light
+          </span>
+          <div className="flex gap-3 rounded-2xl bg-background p-4 overflow-x-auto">
+            {LEVELS.map((n) => (
+              <SurfaceChip key={n} level={n} />
+            ))}
+          </div>
         </div>
       </div>
+    </ComponentPreview>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The problem — collapse demo
+// ---------------------------------------------------------------------------
+
+function NaiveMenu() {
+  const Star = useIcon("star");
+  const Clock = useIcon("clock");
+  const Lock = useIcon("lock");
+  const CheckIcon = useIcon("check");
+  const items: { icon: IconComponent; label: string; checked?: boolean }[] = [
+    { icon: Star, label: "Favorites", checked: true },
+    { icon: Clock, label: "Recents" },
+    { icon: Lock, label: "Private" },
+  ];
+  return (
+    <div className="relative flex flex-col gap-0.5 w-full rounded-3xl bg-surface-5 shadow-surface-3 p-1 select-none">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className="relative flex items-center gap-2 rounded-[18px] px-2 py-2"
+        >
+          <item.icon
+            size={16}
+            strokeWidth={item.checked ? 2 : 1.5}
+            className={
+              item.checked ? "text-foreground" : "text-muted-foreground"
+            }
+          />
+          <span
+            className={cn(
+              "text-[13px] flex-1",
+              item.checked ? "text-foreground" : "text-muted-foreground"
+            )}
+            style={{
+              fontVariationSettings: item.checked
+                ? fontWeights.semibold
+                : fontWeights.normal,
+            }}
+          >
+            {item.label}
+          </span>
+          {item.checked && (
+            <CheckIcon size={16} strokeWidth={2} className="text-foreground" />
+          )}
+        </div>
+      ))}
     </div>
   );
 }
 
-export default function SurfacesDoc() {
+function ElevatedMenu() {
+  const Star = useIcon("star");
+  const Clock = useIcon("clock");
+  const Lock = useIcon("lock");
   return (
-    <DocPage
-      title="Surfaces"
-      description={
-        <>
-          Eight-level surface and shadow ladder for elevation.
-          <br />
-          Light mode: two color steps then flat white, differentiated by shadow.
-          <br />
-          <UseDarkLink>Dark mode</UseDarkLink>: additive white-opacity ladder with layered inset highlights and drops.
-        </>
-      }
-    >
-      <DocSection title="Installation">
-        <div className="text-[13px] text-muted-foreground">
-          Tokens ship in <code className="px-1 py-0.5 rounded bg-muted text-[12px]">app/globals.css</code>.
-          Once added, every <code className="px-1 py-0.5 rounded bg-muted text-[12px]">bg-surface-N</code> and{" "}
-          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">shadow-surface-N</code> utility
-          (where N is 1–8) becomes available. The existing{" "}
-          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">--background</code>,{" "}
-          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">--muted</code>, and{" "}
-          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">--card</code> tokens are
-          re-derived as aliases of <code className="px-1 py-0.5 rounded bg-muted text-[12px]">--surface-1</code>,{" "}
-          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">--surface-2</code>, and{" "}
-          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">--surface-3</code>.
-        </div>
-      </DocSection>
+    <Dropdown checkedIndex={0} className="!w-full">
+      <MenuItem index={0} icon={Star} label="Favorites" checked />
+      <MenuItem index={1} icon={Clock} label="Recents" />
+      <MenuItem index={2} icon={Lock} label="Private" />
+    </Dropdown>
+  );
+}
 
-      <DocSection title="Playground">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ThemedColumn theme="dark">
-            <SimplePlayground />
-            <Playground />
-          </ThemedColumn>
-          <ThemedColumn theme="light">
-            <SimplePlayground />
-            <Playground />
-          </ThemedColumn>
-        </div>
-      </DocSection>
-
-      <DocSection title="The ladder">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ThemedColumn theme="dark">
-            <div className="flex flex-col divide-y divide-border/60">
-              {LEVELS.map((l) => (
-                <LadderRow key={l} level={l} />
-              ))}
+function CollapseDemo() {
+  return (
+    <ComponentPreview code={COLLAPSE_CODE}>
+      <div className="dark w-full">
+        <SurfaceProvider value={5}>
+          <div
+            className={cn(
+              "flex flex-col gap-5 p-6 rounded-2xl w-full max-w-[640px] mx-auto",
+              surfaceClasses(5)
+            )}
+          >
+            <span
+              className="text-[12px] text-muted-foreground"
+              style={{ fontVariationSettings: fontWeights.medium }}
+            >
+              Dialog surface
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] text-muted-foreground tracking-wider">
+                  Problem
+                </span>
+                <NaiveMenu />
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className="text-[11px] text-muted-foreground tracking-wider">
+                  Solution
+                </span>
+                <ElevatedMenu />
+              </div>
             </div>
-          </ThemedColumn>
-          <ThemedColumn theme="light">
-            <div className="flex flex-col divide-y divide-border/60">
-              {LEVELS.map((l) => (
-                <LadderRow key={l} level={l} />
-              ))}
-            </div>
-          </ThemedColumn>
-        </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <div className="flex flex-col gap-3 text-[13px] text-muted-foreground leading-relaxed">
-          <p>
-            Each surface level pairs a background color with a shadow recipe of matching elevation.
-            Apply them together: <code className="px-1 py-0.5 rounded bg-muted text-[12px]">className=&quot;bg-surface-3 shadow-surface-3&quot;</code>.
-          </p>
-          <p>
-            In light mode, surfaces 3–8 share the same <code className="px-1 py-0.5 rounded bg-muted text-[12px]">#FFFFFF</code> background;
-            the shadow alone communicates elevation. <UseDarkLink>In dark mode</UseDarkLink>, each level adds a small amount of white opacity over <code className="px-1 py-0.5 rounded bg-muted text-[12px]">#171717</code>,
-            and the shadow recipe layers an inset top-edge highlight, an inset border ring, an outer hairline, and stacked drop shadows.
-          </p>
-          <p>
-            Shadows compose additively — surface N + 1&apos;s recipe is surface N&apos;s recipe with one additional drop layer at the next halving offset.
-            This makes the elevation walk smoothly across the full ladder.
-          </p>
-        </div>
-      </DocSection>
-
-      <DocSection title="Relative elevation">
-        <div className="flex flex-col gap-3 text-[13px] text-muted-foreground leading-relaxed">
-          <p>
-            Elevated components don&apos;t pick a fixed surface level — their <em>background</em> elevates relative to whatever they sit on.
-            A Dropdown opened on the page background renders with a darker bg; the same Dropdown opened inside a Dialog renders with a lighter bg.
-            Without this, nesting collapses (a popover inside a popover renders the same color as its parent and disappears).
-          </p>
-          <p>
-            The mechanism: <code className="px-1 py-0.5 rounded bg-muted text-[12px]">SurfaceProvider</code> declares the current substrate level
-            via React context. <code className="px-1 py-0.5 rounded bg-muted text-[12px]">useSurface()</code> reads it (default <code className="px-1 py-0.5 rounded bg-muted text-[12px]">1</code>, the page background).
-            Each elevated component computes its level as <code className="px-1 py-0.5 rounded bg-muted text-[12px]">substrate + offset</code> and re-provides the
-            new substrate to its children, so further nesting walks up the ladder.
-          </p>
-          <p>
-            <strong className="text-foreground">Shadow stays fixed per component type.</strong> A popover always reads as a popover (same shadow weight) even when its background lifts to match a deeper context. This way a popover-inside-a-dialog doesn&apos;t suddenly look like a higher-tier component just because of where it&apos;s rendered — only its bg adapts; its shadow signature is intrinsic.
-          </p>
-        </div>
-        <RelativeElevationDemo />
-      </DocSection>
-
-      <DocSection title="In a real component">
-        <div className="flex flex-col gap-3 text-[13px] text-muted-foreground leading-relaxed">
-          <p>
-            Open the format dropdown inside this color picker. The dropdown&apos;s background lifts above the picker panel because it nests one level deeper, but its shadow is the same shadow you&apos;d see on any dropdown.
-          </p>
-        </div>
-        <ColorPickerDemo />
-      </DocSection>
-
-      <DocSection title="Used by">
-        <div className="flex flex-col gap-2 text-[13px] text-muted-foreground">
-          <UsedByRow label="Tabs (selected pill)" detail="bg-surface-4 · shadow-surface-4" />
-          <UsedByRow label="Dropdown" detail="bg-surface-{substrate+2} · shadow-surface-3" />
-          <UsedByRow label="Select" detail="bg-surface-{substrate+2} · shadow-surface-3" />
-          <UsedByRow label="ColorPicker (popover)" detail="bg-surface-{substrate+2} · shadow-surface-3" />
-          <UsedByRow label="MobileDrawer" detail="bg-surface-{substrate+2} · shadow-surface-3" />
-          <UsedByRow label="Dialog" detail="bg-surface-5 · shadow-surface-5" />
-          <UsedByRow label="Tooltip" detail="inverted (foreground/background)" />
-        </div>
-      </DocSection>
-    </DocPage>
+          </div>
+        </SurfaceProvider>
+      </div>
+    </ComponentPreview>
   );
 }
 
-function ThemedColumn({ theme, children }: { theme: "dark" | "light"; children: ReactNode }) {
-  return (
-    <div className={`${theme} bento-card-border border bg-background rounded-2xl p-6 flex flex-col gap-6`}>
-      <span
-        className="text-[11px] text-muted-foreground uppercase tracking-wider"
-        style={{ fontVariationSettings: fontWeights.semibold }}
-      >
-        {theme === "dark" ? "Dark mode" : "Light mode"}
-      </span>
-      {children}
-    </div>
-  );
-}
+// ---------------------------------------------------------------------------
+// Substrate context — page → popover → dialog
+// ---------------------------------------------------------------------------
 
-function ColorPickerDemo() {
-  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
-  return (
-    <div
-      ref={setContainerEl}
-      className="dark relative bento-card-border border bg-background rounded-2xl p-12 flex items-start justify-center min-h-[560px]"
-    >
-      <ColorPickerPortalContainer value={containerEl}>
-        <ColorPicker defaultValue="#FF6B35" formatOpen />
-      </ColorPickerPortalContainer>
-    </div>
-  );
-}
-
-function UseDarkLink({ children }: { children: ReactNode }) {
-  const { setTheme } = useThemeContext();
-  return (
-    <button
-      type="button"
-      onClick={() => setTheme("dark")}
-      className="underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors cursor-pointer"
-    >
-      {children}
-    </button>
-  );
-}
-
-function RelativeElevationDemo() {
+function SubstrateDemo() {
   const Star = useIcon("star");
   const Clock = useIcon("clock");
   const Lock = useIcon("lock");
@@ -349,54 +299,463 @@ function RelativeElevationDemo() {
     { icon: Lock, label: "Private" },
   ];
 
-  const renderDropdown = (key: string) => (
-    <Dropdown key={key} className="w-full" checkedIndex={0}>
-      {items.map((item, i) => (
-        <MenuItem
-          key={item.label}
-          index={i}
-          icon={item.icon}
-          label={item.label}
-          checked={i === 0}
-        />
-      ))}
-    </Dropdown>
-  );
-
-  const scenarios: { substrate: number; label: string; rendered: number }[] = [
-    { substrate: 1, label: "On the page", rendered: 3 },
-    { substrate: 3, label: "Inside a popover", rendered: 5 },
-    { substrate: 5, label: "Inside a Dialog", rendered: 7 },
+  const scenarios = [
+    { substrate: 1, label: "On the page" },
+    { substrate: 3, label: "Inside a popover" },
+    { substrate: 5, label: "Inside a dialog" },
   ];
 
   return (
-    <div className="dark grid grid-cols-1 md:grid-cols-3 gap-4">
-      {scenarios.map(({ substrate, label, rendered }) => (
-        <BentoCard
-          key={substrate}
-          slug=""
-          name={`${label} — substrate ${substrate} → surface ${rendered}`}
-          style={{ backgroundColor: `var(--surface-${substrate})` }}
+    <ComponentPreview code={SUBSTRATE_CODE}>
+      <div className="dark grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+        {scenarios.map(({ substrate, label }) => (
+          <div
+            key={substrate}
+            className="flex flex-col gap-3 rounded-2xl p-4 border border-border/40"
+            style={{ backgroundColor: `var(--surface-${substrate})` }}
+          >
+            <span
+              className="text-[12px] text-foreground"
+              style={{ fontVariationSettings: fontWeights.semibold }}
+            >
+              {label}
+            </span>
+            <SurfaceProvider value={substrate}>
+              <Dropdown className="w-full" checkedIndex={0}>
+                {items.map((item, i) => (
+                  <MenuItem
+                    key={item.label}
+                    index={i}
+                    icon={item.icon}
+                    label={item.label}
+                    checked={i === 0}
+                  />
+                ))}
+              </Dropdown>
+            </SurfaceProvider>
+          </div>
+        ))}
+      </div>
+    </ComponentPreview>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Elevated primitive — preview shows nested boxes, code shows source
+// ---------------------------------------------------------------------------
+
+function ElevatedDemo() {
+  return (
+    <ComponentPreview code={ELEVATED_SOURCE}>
+      <div className="dark w-full">
+        <div
+          className={cn(
+            "flex flex-col gap-3 p-5 rounded-2xl w-full max-w-[480px] mx-auto",
+            surfaceClasses(1)
+          )}
         >
-          <SurfaceProvider value={substrate}>
-            {renderDropdown(`d-${substrate}`)}
-          </SurfaceProvider>
-        </BentoCard>
-      ))}
+          <span className="text-[11px] text-muted-foreground font-mono">
+            substrate 1
+          </span>
+          <Elevated offset={2} className="rounded-2xl p-5 flex flex-col gap-3">
+            <span className="text-[11px] text-muted-foreground font-mono">
+              Elevated offset 2 → surface 3
+            </span>
+            <Elevated
+              offset={2}
+              className="rounded-2xl p-5 flex flex-col gap-3"
+            >
+              <span className="text-[11px] text-muted-foreground font-mono">
+                Elevated offset 2 → surface 5
+              </span>
+              <Elevated offset={2} className="rounded-2xl p-5">
+                <span className="text-[11px] text-muted-foreground font-mono">
+                  Elevated offset 2 → surface 7
+                </span>
+              </Elevated>
+            </Elevated>
+          </Elevated>
+        </div>
+      </div>
+    </ComponentPreview>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Examples — ColorPicker, InviteDialog
+// ---------------------------------------------------------------------------
+
+function ColorPickerDemo() {
+  const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
+  return (
+    <ComponentPreview code={COLOR_PICKER_CODE}>
+      <div
+        ref={setContainerEl}
+        className="dark relative w-full rounded-2xl overflow-hidden flex items-start justify-center min-h-[520px] py-12 bg-background"
+      >
+        <div
+          className="absolute inset-0 bg-black/30 pointer-events-none"
+          aria-hidden
+        />
+        <ColorPickerPortalContainer value={containerEl}>
+          <ColorPicker defaultValue="#6B97FF" formatOpen />
+        </ColorPickerPortalContainer>
+      </div>
+    </ComponentPreview>
+  );
+}
+
+function RoleItem({
+  index,
+  icon: Icon,
+  label,
+  description,
+  checked,
+}: {
+  index: number;
+  icon: IconComponent;
+  label: string;
+  description: string;
+  checked: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { registerItem, activeIndex, checkedIndex } = useDropdown();
+  const shape = useShape();
+  const CheckIcon = useIcon("check");
+
+  useEffect(() => {
+    registerItem(index, ref.current);
+    return () => registerItem(index, null);
+  }, [index, registerItem]);
+
+  const isActive = activeIndex === index;
+  const highlighted = isActive || checked;
+
+  return (
+    <div
+      ref={ref}
+      data-proximity-index={index}
+      role="menuitemradio"
+      aria-checked={checked}
+      aria-label={label}
+      tabIndex={index === (checkedIndex ?? 0) ? 0 : -1}
+      className={cn(
+        "relative z-10 flex items-start gap-3 px-3 py-2.5 cursor-pointer outline-none transition-colors duration-80",
+        shape.item
+      )}
+    >
+      <Icon
+        size={18}
+        strokeWidth={highlighted ? 2 : 1.5}
+        className={cn(
+          "shrink-0 mt-0.5 transition-[color,stroke-width] duration-80",
+          highlighted ? "text-foreground" : "text-muted-foreground"
+        )}
+      />
+      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+        <span
+          className={cn(
+            "text-[13px] transition-colors duration-80",
+            highlighted ? "text-foreground" : "text-muted-foreground"
+          )}
+          style={{
+            fontVariationSettings: checked
+              ? fontWeights.semibold
+              : fontWeights.medium,
+          }}
+        >
+          {label}
+        </span>
+        <span className="text-[12px] text-muted-foreground leading-snug">
+          {description}
+        </span>
+      </div>
+      {checked && (
+        <CheckIcon
+          size={16}
+          strokeWidth={2}
+          className="text-foreground shrink-0 mt-0.5"
+        />
+      )}
     </div>
   );
 }
 
-function UsedByRow({ label, detail }: { label: string; detail: string }) {
+function InviteDialogDemo() {
+  const XIcon = useIcon("x");
+  const Users = useIcon("users");
+  const User = useIcon("user");
+  const Lock = useIcon("lock");
+  const ChevronDown = useIcon("chevron-down");
+
   return (
-    <div className="flex items-baseline gap-3">
-      <span
-        className="text-[13px] text-foreground shrink-0 w-44"
-        style={{ fontVariationSettings: fontWeights.semibold }}
-      >
-        {label}
-      </span>
-      <span className="font-mono text-[12px]">{detail}</span>
-    </div>
+    <ComponentPreview code={INVITE_DIALOG_CODE}>
+      <div className="dark relative w-full rounded-2xl overflow-hidden min-h-[640px] flex items-center justify-center p-6 bg-background">
+        <div
+          className="absolute inset-0 bg-black/30 pointer-events-none"
+          aria-hidden
+        />
+        <SurfaceProvider value={5}>
+          <div
+            className={cn(
+              "relative w-full max-w-[440px] rounded-2xl p-6 flex flex-col gap-5",
+              surfaceClasses(5)
+            )}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center text-[12px]"
+                  style={{ fontVariationSettings: fontWeights.semibold }}
+                >
+                  M
+                </div>
+                <span
+                  className="text-[15px] text-foreground"
+                  style={{ fontVariationSettings: fontWeights.semibold }}
+                >
+                  Invite to your workspace
+                </span>
+              </div>
+              <button
+                type="button"
+                aria-label="Close"
+                className="text-muted-foreground hover:text-foreground p-1 -mr-1 -mt-1 cursor-pointer"
+              >
+                <XIcon size={16} strokeWidth={1.5} />
+              </button>
+            </div>
+
+            <label className="flex flex-col gap-2">
+              <span
+                className="text-[13px] text-foreground"
+                style={{ fontVariationSettings: fontWeights.medium }}
+              >
+                Email
+              </span>
+              <textarea
+                readOnly
+                rows={3}
+                placeholder="email@gmail.com, email2@gmail.com..."
+                className="text-[13px] text-foreground placeholder:text-muted-foreground bg-transparent hover:bg-hover border border-border rounded-xl px-3 py-2 resize-none outline-none transition-colors duration-80 cursor-pointer"
+              />
+            </label>
+
+            <div className="flex flex-col gap-2">
+              <span
+                className="text-[13px] text-foreground"
+                style={{ fontVariationSettings: fontWeights.medium }}
+              >
+                Select role
+              </span>
+              <button
+                type="button"
+                aria-expanded
+                className="flex items-center justify-between gap-2 h-10 px-3 rounded-xl bg-active text-[13px] text-foreground border border-border cursor-pointer transition-colors duration-80"
+              >
+                <span>Member</span>
+                <ChevronDown
+                  size={14}
+                  strokeWidth={1.5}
+                  className="text-muted-foreground rotate-180 transition-transform"
+                />
+              </button>
+              <div className="-mt-px">
+                <Dropdown checkedIndex={1} className="!w-full">
+                  <RoleItem
+                    index={0}
+                    icon={Users}
+                    label="Workspace owner"
+                    description="Can change workspace settings and invite new members"
+                    checked={false}
+                  />
+                  <RoleItem
+                    index={1}
+                    icon={User}
+                    label="Member"
+                    description="Can't change workspace settings or invite new members"
+                    checked={true}
+                  />
+                  <RoleItem
+                    index={2}
+                    icon={Lock}
+                    label="Restricted member"
+                    description="Can only see and edit content they created"
+                    checked={false}
+                  />
+                </Dropdown>
+              </div>
+            </div>
+
+            <div className="flex justify-end items-center gap-2 pt-2">
+              <button
+                type="button"
+                className="h-9 px-4 rounded-full bg-transparent hover:bg-hover text-[13px] text-foreground cursor-pointer transition-colors duration-80"
+                style={{ fontVariationSettings: fontWeights.medium }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled
+                className="h-9 px-4 rounded-full bg-foreground text-background text-[13px] cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
+                style={{ fontVariationSettings: fontWeights.semibold }}
+              >
+                Send invites
+              </button>
+            </div>
+          </div>
+        </SurfaceProvider>
+      </div>
+    </ComponentPreview>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Theme-switch links (used in the intro copy)
+// ---------------------------------------------------------------------------
+
+function UseThemeLink({
+  theme,
+  children,
+}: {
+  theme: "dark" | "light";
+  children: ReactNode;
+}) {
+  const { setTheme } = useThemeContext();
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(theme)}
+      className="underline decoration-dotted underline-offset-2 hover:text-foreground transition-colors cursor-pointer"
+    >
+      {children}
+    </button>
+  );
+}
+
+function UseDarkLink({ children }: { children: ReactNode }) {
+  return <UseThemeLink theme="dark">{children}</UseThemeLink>;
+}
+
+function UseLightLink({ children }: { children: ReactNode }) {
+  return <UseThemeLink theme="light">{children}</UseThemeLink>;
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export default function SurfacesDoc() {
+  return (
+    <DocPage
+      title="Elevation"
+      description={
+        <>
+          Eight surface levels that nest. Components read their substrate from
+          context and lift relative to it, so popovers, dropdowns, and dialogs
+          stay visible at any depth — in both{" "}
+          <UseLightLink>light</UseLightLink> and{" "}
+          <UseDarkLink>dark</UseDarkLink> mode.
+        </>
+      }
+    >
+      <DocSection title="Installation">
+        <InputCopy value={INSTALL_CMD} />
+      </DocSection>
+
+      <DocSection title="The problem">
+        <div className="flex flex-col gap-3 text-[13px] text-muted-foreground leading-relaxed">
+          <p>
+            Hard-coded surface levels collapse the moment a component nests
+            inside something at the same level. Inside a substrate-5 dialog,
+            a popover that hard-codes
+            <code className="px-1 py-0.5 rounded bg-muted text-[12px] mx-1">
+              bg-surface-5
+            </code>
+            literally disappears into the dialog.
+          </p>
+        </div>
+        <CollapseDemo />
+      </DocSection>
+
+      <DocSection title="The system">
+        <div className="flex flex-col gap-3 text-[13px] text-muted-foreground leading-relaxed">
+          <p>Three pieces: tokens, substrate context, and the primitive.</p>
+        </div>
+
+        <h3
+          className="text-[15px] text-foreground mt-2"
+          style={{ fontVariationSettings: fontWeights.semibold }}
+        >
+          Tokens
+        </h3>
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
+          Eight bg/shadow pairs. Light mode flattens to white after step 2
+          (shadow alone carries elevation). Dark mode keeps adding white-opacity
+          plus a layered shadow recipe.
+        </p>
+        <TokensDemo />
+
+        <h3
+          className="text-[15px] text-foreground mt-6"
+          style={{ fontVariationSettings: fontWeights.semibold }}
+        >
+          Substrate
+        </h3>
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
+          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">
+            SurfaceProvider
+          </code>{" "}
+          declares the current level;{" "}
+          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">
+            useSurface()
+          </code>{" "}
+          reads it (default: 1, the page).
+        </p>
+        <SubstrateDemo />
+
+        <h3
+          className="text-[15px] text-foreground mt-6"
+          style={{ fontVariationSettings: fontWeights.semibold }}
+        >
+          Elevated
+        </h3>
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
+          ~15 lines: read substrate, add offset, apply classes, re-provide.{" "}
+          <code className="px-1 py-0.5 rounded bg-muted text-[12px]">
+            shadowLevel
+          </code>{" "}
+          lets the bg track the stack while the shadow signature stays
+          fixed per component type.
+        </p>
+        <ElevatedDemo />
+      </DocSection>
+
+      <DocSection title="Examples">
+        <h3
+          className="text-[15px] text-foreground"
+          style={{ fontVariationSettings: fontWeights.semibold }}
+        >
+          Color picker
+        </h3>
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
+          The format dropdown sits one level above the picker panel.
+        </p>
+        <ColorPickerDemo />
+
+        <h3
+          className="text-[15px] text-foreground mt-6"
+          style={{ fontVariationSettings: fontWeights.semibold }}
+        >
+          Invite dialog
+        </h3>
+        <p className="text-[13px] text-muted-foreground leading-relaxed">
+          Dialog at surface 5, role picker at surface 7 — no props passed
+          between them.
+        </p>
+        <InviteDialogDemo />
+      </DocSection>
+    </DocPage>
   );
 }

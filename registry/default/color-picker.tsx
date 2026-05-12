@@ -759,13 +759,21 @@ function FormatDropdown({
         aria-haspopup="menu"
         aria-expanded={open}
         className={cn(
-          "flex items-center justify-between gap-2 h-9 px-3 text-[13px] text-muted-foreground bg-transparent hover:bg-hover hover:text-foreground active:bg-active transition-colors duration-80 outline-none focus-visible:ring-1 focus-visible:ring-[#6B97FF] cursor-pointer",
+          "flex items-center justify-between gap-2 h-9 px-3 text-[13px] bg-transparent hover:bg-hover hover:text-foreground transition-colors duration-80 outline-none focus-visible:ring-1 focus-visible:ring-[#6B97FF] cursor-pointer",
+          open ? "bg-active text-foreground" : "text-muted-foreground active:bg-active",
           shape.input
         )}
         style={{ fontVariationSettings: fontWeights.medium }}
       >
         <span>{FORMAT_LABELS[value]}</span>
-        <ChevronDownIcon size={14} strokeWidth={1.5} className="text-muted-foreground" />
+        <ChevronDownIcon
+          size={14}
+          strokeWidth={1.5}
+          className={cn(
+            "text-muted-foreground transition-transform duration-150",
+            open && "rotate-180"
+          )}
+        />
       </button>
       {open && pos && typeof document !== "undefined" && createPortal(
         <div

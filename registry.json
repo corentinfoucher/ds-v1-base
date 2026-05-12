@@ -136,6 +136,19 @@
       ]
     },
     {
+      "name": "elevated",
+      "type": "registry:lib",
+      "title": "Elevated",
+      "description": "Elevation primitive. Wraps the read-substrate / compute-level / apply-classes / re-provide-context pattern into one component. Pulls in the surface theme tokens, substrate context, and class lookup so a single install drops in the whole elevation system.",
+      "registryDependencies": ["surfaces", "utils", "surface-context", "surface-classes"],
+      "files": [
+        {
+          "path": "registry/default/lib/elevated.tsx",
+          "type": "registry:lib"
+        }
+      ]
+    },
+    {
       "name": "shape-context",
       "type": "registry:lib",
       "title": "Shape Context",

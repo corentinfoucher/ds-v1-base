@@ -70,9 +70,13 @@
   --checker-a: #bbbbbb;
   --checker-b: #ffffff;
 
-  /* Surface-relative interactive overlays (work on any elevation) */
-  --hover: color-mix(in oklab, var(--foreground) 6%, transparent);
-  --active: color-mix(in oklab, var(--foreground) 10%, transparent);
+  /* Surface-relative interactive overlays (work on any elevation).
+     --overlay is the *tint direction* — black for light surfaces, white for dark.
+     Decoupled from --foreground so a forced-theme scope (e.g. .dark inside a
+     light page) gets the correct overlay even when text color is reassigned. */
+  --overlay: 0 0 0;
+  --hover: rgb(var(--overlay) / 0.06);
+  --active: rgb(var(--overlay) / 0.1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -136,6 +140,10 @@
 
     --checker-a: #1f1f1f;
     --checker-b: #2a2a2a;
+
+    --overlay: 255 255 255;
+    --hover: rgb(var(--overlay) / 0.06);
+    --active: rgb(var(--overlay) / 0.1);
   }
 }
 
@@ -178,6 +186,10 @@
 
   --checker-a: #bbbbbb;
   --checker-b: #ffffff;
+
+  --overlay: 0 0 0;
+  --hover: rgb(var(--overlay) / 0.06);
+  --active: rgb(var(--overlay) / 0.1);
 }
 
 .dark {
@@ -228,6 +240,10 @@
 
   --checker-a: #1f1f1f;
   --checker-b: #2a2a2a;
+
+  --overlay: 255 255 255;
+  --hover: rgb(var(--overlay) / 0.06);
+  --active: rgb(var(--overlay) / 0.1);
 }
 
 @theme inline {

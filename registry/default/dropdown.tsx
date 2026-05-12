@@ -15,8 +15,7 @@ import { cn } from "@/lib/utils";
 import { springs } from "@/lib/springs";
 import { useProximityHover } from "@/hooks/use-proximity-hover";
 import { useShape } from "@/lib/shape-context";
-import { useSurface, SurfaceProvider } from "@/lib/surface-context";
-import { surfaceClasses } from "@/lib/surface-classes";
+import { Elevated } from "@/lib/elevated";
 
 interface DropdownContextValue {
   registerItem: (index: number, element: HTMLElement | null) => void;
@@ -63,13 +62,12 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
     const isHoveringOther =
       activeIndex !== null && activeIndex !== checkedIndex;
     const shape = useShape();
-    const substrate = useSurface();
-    const level = Math.min(substrate + 2, 8);
 
     return (
-      <SurfaceProvider value={level}>
       <DropdownContext.Provider value={{ registerItem, activeIndex, checkedIndex }}>
-        <div
+        <Elevated
+          offset={2}
+          shadowLevel={3}
           ref={(node) => {
             (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
             if (typeof ref === "function") ref(node);
@@ -118,7 +116,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
           }}
           role="menu"
           className={cn(
-            `relative flex flex-col gap-0.5 w-72 max-w-full ${shape.container} ${surfaceClasses(level, 3)} p-1 select-none`,
+            `relative flex flex-col gap-0.5 w-72 max-w-full ${shape.container} p-1 select-none`,
             className
           )}
           {...props}
@@ -196,9 +194,8 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
           </AnimatePresence>
 
           {children}
-        </div>
+        </Elevated>
       </DropdownContext.Provider>
-      </SurfaceProvider>
     );
   }
 );
