@@ -38,3 +38,11 @@ export const componentList: ComponentEntry[] = [
   { slug: "thinking-steps", name: "ThinkingSteps", description: "Chain-of-thought display with sequential animation and collapsible steps.", isNew: true, gridSize: "large" },
   { slug: "tooltip", name: "Tooltip", description: "Floating tooltip with spring-based animations and configurable placement.", gridSize: "small" },
 ];
+
+/** Combined prev/next navigation order for doc pages.
+ *  Used by DocPage's arrow nav. Keep in sync with the sidebar order in
+ *  `app/components/sidebar.tsx` (Introduction → systemList → componentList). */
+export const docOrder: Array<{ slug: string; name: string }> = [
+  ...systemList.map((s) => ({ slug: s.slug, name: s.name })),
+  ...componentList.map((c) => ({ slug: c.slug, name: c.name })),
+];

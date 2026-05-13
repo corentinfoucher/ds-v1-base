@@ -17,16 +17,12 @@ import { useThemeContext } from "@/registry/default/lib/theme-context";
 import { surfaceClasses } from "@/registry/default/lib/surface-classes";
 import { cn } from "@/registry/default/lib/utils";
 import { ComponentPreview } from "@/lib/docs/ComponentPreview";
-import { InputCopy } from "@/registry/default/input-copy";
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 // ---------------------------------------------------------------------------
 // Code snippets (shown in the Code tab of each ComponentPreview)
 // ---------------------------------------------------------------------------
-
-const INSTALL_CMD =
-  "npx shadcn@latest add https://www.fluidfunctionalism.com/r/elevated.json";
 
 const COLLAPSE_CODE = `// Inside a dialog (substrate 5):
 
@@ -642,6 +638,8 @@ export default function SurfacesDoc() {
   return (
     <DocPage
       title="Surfaces"
+      slug="surfaces"
+      installSlug="elevated"
       description={
         <>
           Eight surface levels that nest. Components read their substrate from
@@ -652,10 +650,6 @@ export default function SurfacesDoc() {
         </>
       }
     >
-      <DocSection title="Installation">
-        <InputCopy value={INSTALL_CMD} />
-      </DocSection>
-
       <DocSection title="The problem">
         <div className="flex flex-col gap-3 text-[13px] text-muted-foreground leading-relaxed">
           <p>

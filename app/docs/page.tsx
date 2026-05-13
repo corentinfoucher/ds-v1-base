@@ -4,13 +4,13 @@ import Link from "next/link";
 import { fontWeights } from "@/registry/default/lib/font-weight";
 import { Button } from "@/registry/default/button";
 import { useIcon } from "@/lib/icon-context";
-import { componentList } from "@/lib/docs/components";
+import { docOrder } from "@/lib/docs/components";
 import { InputCopy } from "@/registry/default/input-copy";
 import { Tooltip } from "@/registry/default/tooltip";
 
 export default function DocsIndex() {
   const ArrowRight = useIcon("arrow-right");
-  const firstComponent = componentList[0];
+  const firstComponent = docOrder[0];
 
   return (
     <div className="flex flex-col gap-8 px-6">

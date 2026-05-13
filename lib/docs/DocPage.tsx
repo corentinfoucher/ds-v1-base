@@ -6,26 +6,40 @@ import { fontWeights } from "@/registry/default/lib/font-weight";
 import { InputCopy } from "@/registry/default/input-copy";
 import { Button } from "@/registry/default/button";
 import { useIcon } from "@/lib/icon-context";
-import { componentList } from "@/lib/docs/components";
+import { docOrder } from "@/lib/docs/components";
 import { Tooltip } from "@/registry/default/tooltip";
 
 interface DocPageProps {
   title: string;
   description: ReactNode;
+  /** Slug used for prev/next navigation (must match a `componentList` entry). */
   slug?: string;
+  /** Registry slug used for the auto-injected Installation snippet. Defaults to `slug`.
+   *  Set when the install advertises a bundled registry item different from the page slug
+   *  (e.g. `slug="surfaces"` but `installSlug="elevated"`). */
+  installSlug?: string;
+  /** Set to false to skip the auto-injected Installation block (when the page provides its own). */
+  showInstall?: boolean;
   children: ReactNode;
 }
 
-export function DocPage({ title, description, slug, children }: DocPageProps) {
+export function DocPage({
+  title,
+  description,
+  slug,
+  installSlug,
+  showInstall = true,
+  children,
+}: DocPageProps) {
   const ArrowRight = useIcon("arrow-right");
 
-  const currentIndex = slug ? componentList.findIndex((c) => c.slug === slug) : -1;
+  const currentIndex = slug ? docOrder.findIndex((c) => c.slug === slug) : -1;
   const prev = currentIndex > 0
-    ? componentList[currentIndex - 1]
+    ? docOrder[currentIndex - 1]
     : currentIndex === 0
       ? { slug: "", name: "Introduction" }
       : null;
-  const next = currentIndex >= 0 && currentIndex < componentList.length - 1 ? componentList[currentIndex + 1] : null;
+  const next = currentIndex >= 0 && currentIndex < docOrder.length - 1 ? docOrder[currentIndex + 1] : null;
 
   return (
     <div className="flex flex-col gap-8 px-6">
@@ -70,7 +84,7 @@ export function DocPage({ title, description, slug, children }: DocPageProps) {
           </div>
         )}
       </div>
-      {slug && (
+      {slug && showInstall && (
         <div className="flex flex-col gap-3">
           <h2
             className="text-[16px] text-foreground leading-none"
@@ -78,7 +92,7 @@ export function DocPage({ title, description, slug, children }: DocPageProps) {
           >
             Installation
           </h2>
-          <InputCopy value={`npx shadcn@latest add https://www.fluidfunctionalism.com/r/${slug}.json`} />
+          <InputCopy value={`npx shadcn@latest add https://www.fluidfunctionalism.com/r/${installSlug ?? slug}.json`} />
         </div>
       )}
       {children}
