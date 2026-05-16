@@ -21,6 +21,7 @@ import {
   Settings,
   Plus,
   ArrowRight,
+  ArrowUp,
   Search,
   Loader,
   Users,
@@ -46,6 +47,8 @@ import {
   Home,
   MessageCircle,
   Inbox,
+  Pencil,
+  SkipForward,
 } from "lucide-react";
 
 // ── Tabler ──────────────────────────────────────────────────
@@ -68,6 +71,7 @@ import {
   IconSettings,
   IconPlus,
   IconArrowRight,
+  IconArrowUp,
   IconSearch,
   IconLoader2,
   IconUsers,
@@ -92,6 +96,8 @@ import {
   IconHome,
   IconMessageCircle,
   IconInbox,
+  IconPencil,
+  IconPlayerSkipForward,
 } from "@tabler/icons-react";
 
 // ── Phosphor ────────────────────────────────────────────────
@@ -114,6 +120,7 @@ import {
   Gear as PhGear,
   Plus as PhPlus,
   ArrowRight as PhArrowRight,
+  ArrowUp as PhArrowUp,
   MagnifyingGlass as PhMagnifyingGlass,
   Spinner as PhSpinner,
   Users as PhUsers,
@@ -138,6 +145,8 @@ import {
   House as PhHouse,
   ChatCircle as PhChatCircle,
   Tray as PhTray,
+  Pencil as PhPencil,
+  SkipForward as PhSkipForward,
 } from "@phosphor-icons/react";
 
 // ── HugeIcons ───────────────────────────────────────────────
@@ -159,6 +168,7 @@ import HiStar from "@hugeicons/core-free-icons/StarIcon";
 import HiSettings from "@hugeicons/core-free-icons/Settings01Icon";
 import HiPlus from "@hugeicons/core-free-icons/PlusSignIcon";
 import HiArrowRight from "@hugeicons/core-free-icons/ArrowRight01Icon";
+import HiArrowUp from "@hugeicons/core-free-icons/ArrowUp01Icon";
 import HiSearch from "@hugeicons/core-free-icons/Search01Icon";
 import HiLoader from "@hugeicons/core-free-icons/Loading01Icon";
 import HiUsers from "@hugeicons/core-free-icons/UserGroupIcon";
@@ -181,6 +191,8 @@ import HiRotateCcw from "@hugeicons/core-free-icons/ArrowReloadHorizontalIcon";
 import HiHome from "@hugeicons/core-free-icons/Home01Icon";
 import HiMessage from "@hugeicons/core-free-icons/BubbleChatIcon";
 import HiInbox from "@hugeicons/core-free-icons/InboxIcon";
+import HiPencil from "@hugeicons/core-free-icons/PencilEdit01Icon";
+import HiSkipForward from "@hugeicons/core-free-icons/NextIcon";
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -198,13 +210,14 @@ export type IconName =
   | "chevron-right" | "chevron-down" | "x" | "copy" | "menu" | "dot"
   | "monitor" | "sun" | "moon" | "rectangle-horizontal" | "circle"
   | "square-library" | "clock" | "star" | "settings"
-  | "plus" | "arrow-right" | "search" | "loader"
+  | "plus" | "arrow-right" | "arrow-up" | "search" | "loader"
   | "users" | "lock" | "mail" | "bell" | "shield" | "palette"
   | "lightbulb" | "rocket" | "heart" | "paintbrush" | "brain"
   | "globe" | "user"
   | "image" | "link" | "check" | "rotate-ccw"
   | "play" | "pause" | "pipette"
-  | "home" | "message-circle" | "inbox";
+  | "home" | "message-circle" | "inbox"
+  | "pencil" | "skip-forward";
 
 export const iconLibraryOrder: IconLibrary[] = ["lucide", "tabler", "phosphor", "hugeicons"];
 
@@ -270,6 +283,7 @@ const lucideMap: Record<IconName, IconComponent> = {
   "settings": Settings,
   "plus": Plus,
   "arrow-right": ArrowRight,
+  "arrow-up": ArrowUp,
   "search": Search,
   "loader": Loader,
   "users": Users,
@@ -294,6 +308,8 @@ const lucideMap: Record<IconName, IconComponent> = {
   "home": Home,
   "message-circle": MessageCircle,
   "inbox": Inbox,
+  "pencil": Pencil,
+  "skip-forward": SkipForward,
 };
 
 const tablerMap: Record<IconName, IconComponent> = {
@@ -315,6 +331,7 @@ const tablerMap: Record<IconName, IconComponent> = {
   "settings": tabler(IconSettings),
   "plus": tabler(IconPlus),
   "arrow-right": tabler(IconArrowRight),
+  "arrow-up": tabler(IconArrowUp),
   "search": tabler(IconSearch),
   "loader": tabler(IconLoader2),
   "users": tabler(IconUsers),
@@ -339,6 +356,8 @@ const tablerMap: Record<IconName, IconComponent> = {
   "home": tabler(IconHome),
   "message-circle": tabler(IconMessageCircle),
   "inbox": tabler(IconInbox),
+  "pencil": tabler(IconPencil),
+  "skip-forward": tabler(IconPlayerSkipForward),
 };
 
 const phosphorMap: Record<IconName, IconComponent> = {
@@ -360,6 +379,7 @@ const phosphorMap: Record<IconName, IconComponent> = {
   "settings": phosphor(PhGear),
   "plus": phosphor(PhPlus),
   "arrow-right": phosphor(PhArrowRight),
+  "arrow-up": phosphor(PhArrowUp),
   "search": phosphor(PhMagnifyingGlass),
   "loader": phosphor(PhSpinner),
   "users": phosphor(PhUsers),
@@ -384,6 +404,8 @@ const phosphorMap: Record<IconName, IconComponent> = {
   "home": phosphor(PhHouse),
   "message-circle": phosphor(PhChatCircle),
   "inbox": phosphor(PhTray),
+  "pencil": phosphor(PhPencil),
+  "skip-forward": phosphor(PhSkipForward),
 };
 
 const hugeiconsMap: Record<IconName, IconComponent> = {
@@ -405,6 +427,7 @@ const hugeiconsMap: Record<IconName, IconComponent> = {
   "settings": hugeicons(HiSettings),
   "plus": hugeicons(HiPlus),
   "arrow-right": hugeicons(HiArrowRight),
+  "arrow-up": hugeicons(HiArrowUp),
   "search": hugeicons(HiSearch),
   "loader": hugeicons(HiLoader),
   "users": hugeicons(HiUsers),
@@ -429,6 +452,8 @@ const hugeiconsMap: Record<IconName, IconComponent> = {
   "home": hugeicons(HiHome),
   "message-circle": hugeicons(HiMessage),
   "inbox": hugeicons(HiInbox),
+  "pencil": hugeicons(HiPencil),
+  "skip-forward": hugeicons(HiSkipForward),
 };
 
 // ── Unified Map ─────────────────────────────────────────────

@@ -270,6 +270,30 @@
       ]
     },
     {
+      "name": "ask-user-questions",
+      "type": "registry:ui",
+      "title": "Ask User Questions",
+      "description": "Stepped question flow with numbered options, keyboard shortcuts (1\u20139), single or multi-select, inline 'other' text input, optional skip, proximity-based hover, and multi-question navigation. Auto-advances on selection in single-select.",
+      "dependencies": [
+        "framer-motion"
+      ],
+      "registryDependencies": [
+        "utils",
+        "springs",
+        "font-weight",
+        "shape-context",
+        "icon-context",
+        "use-proximity-hover",
+        "button"
+      ],
+      "files": [
+        {
+          "path": "registry/default/ask-user-questions.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
       "name": "badge",
       "type": "registry:ui",
       "title": "Badge",
@@ -586,6 +610,28 @@
       "files": [
         {
           "path": "registry/default/input-group.tsx",
+          "type": "registry:ui"
+        }
+      ]
+    },
+    {
+      "name": "input-message",
+      "type": "registry:ui",
+      "title": "Input Message",
+      "description": "Chat-style message composer with an auto-resizing textarea, flexible left/right action slots, and a built-in send button on a Surface-2 substrate.",
+      "dependencies": [],
+      "registryDependencies": [
+        "utils",
+        "font-weight",
+        "shape-context",
+        "icon-context",
+        "surface-context",
+        "surface-classes",
+        "button"
+      ],
+      "files": [
+        {
+          "path": "registry/default/input-message.tsx",
           "type": "registry:ui"
         }
       ]
