@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   AskUserQuestions,
   type AskUserAnswer,
@@ -9,6 +9,43 @@ import {
 import { ComponentPreview } from "@/lib/docs/ComponentPreview";
 import { PropsTable, type PropDef } from "@/lib/docs/PropsTable";
 import { DocPage, DocSection } from "@/lib/docs/DocPage";
+import { useIcon } from "@/lib/icon-context";
+
+/**
+ * Wraps a ComponentPreview with a Replay button that fully resets the demo.
+ * Bumps an internal `replayKey` to remount the example (clears all internal
+ * state), and optionally invokes `onReset` for parents that own controlled
+ * state (e.g. currentIndex / answers).
+ *
+ * Pattern mirrors the ThinkingSteps doc page's playback button.
+ */
+function ReplayableExample({
+  code,
+  onReset,
+  children,
+}: {
+  code: string;
+  onReset?: () => void;
+  children: (replayKey: number) => ReactNode;
+}) {
+  const [replayKey, setReplayKey] = useState(0);
+  const RotateIcon = useIcon("rotate-ccw");
+  return (
+    <ComponentPreview
+      code={code}
+      playbackButton={{
+        icon: <RotateIcon size={16} strokeWidth={1.5} />,
+        tooltip: "Replay",
+        onClick: () => {
+          onReset?.();
+          setReplayKey((k) => k + 1);
+        },
+      }}
+    >
+      {children(replayKey)}
+    </ComponentPreview>
+  );
+}
 
 // ── Code snippets ──────────────────────────────────────────────
 
@@ -454,46 +491,55 @@ export default function AskUserQuestionsDoc() {
       description="Stepped question flow with 2–5 options, single or multi-select, inline 'other' input, optional skip, and multi-question navigation."
     >
       <DocSection title="Basic">
-        <ComponentPreview code={basicCode}>
-          <AskUserQuestions questions={basicQuestions} />
-        </ComponentPreview>
+        <ReplayableExample code={basicCode}>
+          {(k) => <AskUserQuestions key={k} questions={basicQuestions} />}
+        </ReplayableExample>
       </DocSection>
 
       <DocSection title="Multiple questions">
-        <ComponentPreview code={multipleCode}>
-          <AskUserQuestions questions={multipleQuestions} />
-        </ComponentPreview>
+        <ReplayableExample code={multipleCode}>
+          {(k) => <AskUserQuestions key={k} questions={multipleQuestions} />}
+        </ReplayableExample>
       </DocSection>
 
       <DocSection title="Multi-select">
-        <ComponentPreview code={multiSelectCode}>
-          <AskUserQuestions questions={multiSelectQuestions} />
-        </ComponentPreview>
+        <ReplayableExample code={multiSelectCode}>
+          {(k) => <AskUserQuestions key={k} questions={multiSelectQuestions} />}
+        </ReplayableExample>
       </DocSection>
 
       <DocSection title="With other">
-        <ComponentPreview code={otherCode}>
-          <AskUserQuestions questions={otherQuestions} />
-        </ComponentPreview>
+        <ReplayableExample code={otherCode}>
+          {(k) => <AskUserQuestions key={k} questions={otherQuestions} />}
+        </ReplayableExample>
       </DocSection>
 
       <DocSection title="Skippable">
-        <ComponentPreview code={skipCode}>
-          <AskUserQuestions questions={skipQuestions} />
-        </ComponentPreview>
+        <ReplayableExample code={skipCode}>
+          {(k) => <AskUserQuestions key={k} questions={skipQuestions} />}
+        </ReplayableExample>
       </DocSection>
 
       <DocSection title="Controlled">
-        <ComponentPreview code={controlledCode}>
-          <AskUserQuestions
-            questions={multipleQuestions}
-            currentIndex={index}
-            onCurrentIndexChange={setIndex}
-            answers={answers}
-            onAnswersChange={setAnswers}
-            onComplete={() => setIndex(0)}
-          />
-        </ComponentPreview>
+        <ReplayableExample
+          code={controlledCode}
+          onReset={() => {
+            setIndex(0);
+            setAnswers({});
+          }}
+        >
+          {(k) => (
+            <AskUserQuestions
+              key={k}
+              questions={multipleQuestions}
+              currentIndex={index}
+              onCurrentIndexChange={setIndex}
+              answers={answers}
+              onAnswersChange={setAnswers}
+              onComplete={() => setIndex(0)}
+            />
+          )}
+        </ReplayableExample>
       </DocSection>
 
       <DocSection title="API Reference — AskUserQuestions">
