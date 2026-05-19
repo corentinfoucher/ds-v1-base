@@ -462,13 +462,16 @@ const InputMessage = forwardRef<HTMLDivElement, InputMessageProps>(
           surfaceClasses(2, 2),
           shape.container,
           clickToFocus && !disabled && "cursor-text",
-          // Only attach the hover rule when we're NOT in the focus / drag-over
-          // state — otherwise Tailwind's `:hover` rule (which is emitted later
-          // in the stylesheet than plain utility classes) would beat the
-          // JS-applied focus colour at the cascade level.
-          clickToFocus && !disabled && !focusVisible && !dragOver &&
+          // Edge state precedence (highest → lowest):
+          //   1. drag-over → blue focus-ring colour (drop affordance)
+          //   2. focus     → neutral border bump
+          //   3. hover     → subtle neutral border
+          // Only one rule is attached at a time so Tailwind's `:hover`
+          // cascade can't beat the JS-applied focus / drag colours.
+          dragOver && "border-[#6B97FF]",
+          !dragOver && focusVisible && "border-foreground/20",
+          !dragOver && !focusVisible && clickToFocus && !disabled &&
             "hover:border-border",
-          (focusVisible || dragOver) && "border-foreground/20",
           disabled && "opacity-50 pointer-events-none",
           className
         )}
