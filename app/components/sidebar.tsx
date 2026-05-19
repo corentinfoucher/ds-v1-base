@@ -43,6 +43,7 @@ export function Sidebar({ mobile }: SidebarProps) {
               href={`/docs/${s.slug}`}
               label={s.name}
               isNew={s.isNew}
+              isUpdated={s.isUpdated}
             />
           ))}
         </NavMenu>
@@ -62,6 +63,7 @@ export function Sidebar({ mobile }: SidebarProps) {
               href={`/docs/${c.slug}`}
               label={c.name}
               isNew={c.isNew}
+              isUpdated={c.isUpdated}
             />
           ))}
         </NavMenu>

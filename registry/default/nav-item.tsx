@@ -15,10 +15,11 @@ interface NavItemProps
   index: number;
   icon?: IconComponent;
   isNew?: boolean;
+  isUpdated?: boolean;
 }
 
 const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(
-  ({ label, href, index, icon: Icon, isNew, className, ...props }, ref) => {
+  ({ label, href, index, icon: Icon, isNew, isUpdated, className, ...props }, ref) => {
     const internalRef = useRef<HTMLAnchorElement>(null);
     const { registerItem, registerSlug, activeIndex, activeSlug } =
       useNavMenu();
@@ -94,9 +95,11 @@ const NavItem = forwardRef<HTMLAnchorElement, NavItemProps>(
             }}
           >
             {label}
-            {isNew && (
+            {isUpdated ? (
+              <span className="inline-block ml-2 size-1.5 rounded-full bg-yellow-400 align-middle" />
+            ) : isNew ? (
               <span className="inline-block ml-2 size-1.5 rounded-full bg-blue-500 align-middle" />
-            )}
+            ) : null}
           </span>
         </span>
       </Link>
