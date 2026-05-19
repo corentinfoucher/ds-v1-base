@@ -22,10 +22,14 @@ import { useIcon } from "@/lib/icon-context";
 function ReplayableExample({
   code,
   onReset,
+  align,
+  minHeightClass,
   children,
 }: {
   code: string;
   onReset?: () => void;
+  align?: "center" | "bottom";
+  minHeightClass?: string;
   children: (replayKey: number) => ReactNode;
 }) {
   const [replayKey, setReplayKey] = useState(0);
@@ -33,6 +37,8 @@ function ReplayableExample({
   return (
     <ComponentPreview
       code={code}
+      align={align}
+      minHeightClass={minHeightClass}
       playbackButton={{
         icon: <RotateIcon size={16} strokeWidth={1.5} />,
         tooltip: "Replay",
@@ -54,36 +60,89 @@ const exampleCode = `import { AskUserQuestions } from "./components";
 const questions = [
   {
     id: "role",
-    title: "What's your role?",
+    title: "How do you plan to use Fluid Functionalism?",
     options: [
-      { id: "design", title: "Designer", description: "Visual / interaction" },
-      { id: "eng", title: "Engineer", description: "Frontend / backend" },
-      { id: "pm", title: "PM", description: "Product / program" },
-      { id: "research", title: "Researcher", description: "User / market" },
+      { id: "design", title: "Designer", description: "Prototyping flows and pages" },
+      { id: "eng", title: "Engineer", description: "Shipping production UI" },
+      { id: "pm", title: "PM", description: "Aligning the team on patterns" },
+      { id: "founder", title: "Founder", description: "Bootstrapping a product" },
     ],
   },
   {
-    id: "tools",
-    title: "Which tools do you use day to day?",
+    id: "shape",
+    title: "Which shape language fits your brand?",
+    options: [
+      { id: "rounded", title: "Rounded", description: "Soft, familiar corners" },
+      { id: "pill", title: "Pill", description: "Fully rounded, friendly" },
+    ],
+  },
+  {
+    id: "components",
+    title: "Which components are you reaching for first?",
     multiSelect: true,
     options: [
-      { id: "figma", title: "Figma", description: "Design source of truth" },
-      { id: "vscode", title: "VS Code", description: "Code editor" },
-      { id: "linear", title: "Linear", description: "Issue tracker" },
-      { id: "notion", title: "Notion", description: "Docs and planning" },
+      { id: "input", title: "InputMessage", description: "Chat-style composer with attachments" },
+      { id: "thinking", title: "ThinkingSteps", description: "Streamed reasoning steps" },
+      { id: "ask", title: "AskUserQuestions", description: "Stepped question flows" },
+      { id: "tabs", title: "TabsSubtle", description: "Quiet segmented tabs" },
+      { id: "nav", title: "NavMenu", description: "Sidebar navigation" },
+    ],
+    nextLabel: "Continue",
+  },
+  {
+    id: "drew",
+    title: "What drew you to Fluid Functionalism?",
+    options: [
+      { id: "motion", title: "Motion", description: "Springs that feel alive" },
+      { id: "craft", title: "Craft", description: "Pixel-level polish" },
+      { id: "tokens", title: "Tokens", description: "Shape and elevation systems" },
+    ],
+    allowOther: true,
+    otherPlaceholder: "Something else?",
+  },
+  {
+    id: "frameworks",
+    title: "Where will you ship these components?",
+    multiSelect: true,
+    options: [
+      { id: "next", title: "Next.js", description: "App Router projects" },
+      { id: "remix", title: "Remix", description: "Full-stack apps" },
+      { id: "vite", title: "Vite + React", description: "SPAs and dashboards" },
+      { id: "astro", title: "Astro", description: "Content-first sites" },
+    ],
+  },
+  {
+    id: "themes",
+    title: "Which theme mode do you support?",
+    options: [
+      { id: "light", title: "Light only" },
+      { id: "dark", title: "Dark only" },
+      { id: "system", title: "System-aware" },
+      { id: "toggle", title: "User toggle" },
     ],
   },
   {
     id: "missing",
-    title: "What feels missing in your workflow?",
+    title: "What's missing from the registry today?",
+    multiSelect: true,
     options: [
-      { id: "speed", title: "Speed", description: "Faster iteration loop" },
-      { id: "clarity", title: "Clarity", description: "Sharper goals" },
-      { id: "alignment", title: "Alignment", description: "Same page sooner" },
-      { id: "quality", title: "Quality", description: "Higher craft bar" },
+      { id: "data", title: "Data table", description: "Sortable, filterable rows" },
+      { id: "calendar", title: "Calendar", description: "Date picker and range" },
+      { id: "command", title: "Command menu", description: "Fast keyboard launcher" },
     ],
     allowOther: true,
-    otherPlaceholder: "Something else?",
+    otherPlaceholder: "Tell us what to build next…",
+    nextLabel: "Send feedback",
+  },
+  {
+    id: "recommend",
+    title: "Would you recommend Fluid Functionalism to a teammate?",
+    skippable: false,
+    options: [
+      { id: "yes", title: "Yes", description: "Already have" },
+      { id: "soon", title: "Soon", description: "Once it covers more ground" },
+      { id: "unsure", title: "Not sure yet", description: "Still evaluating" },
+    ],
   },
 ];
 
@@ -251,6 +310,249 @@ const skipCode = `const questions = [
   onSkip={(qId, idx) => console.log("skipped", qId, idx)}
 />`;
 
+const stackedCode = `// Every question opts into the stacked layout. The set covers the
+// same edge cases as the first example — single/multi-select, allowOther,
+// custom nextLabel, skippable:false — so you can see how each behaves
+// when titles and descriptions stack vertically.
+const questions = [
+  {
+    id: "template",
+    title: "Which starting template fits your project?",
+    layout: "stacked",
+    options: [
+      {
+        id: "marketing",
+        title: "Marketing site",
+        description:
+          "Polished landing page with hero, features grid, pricing table, and a footer. Best when you need to ship a story-driven page fast.",
+      },
+      {
+        id: "chat",
+        title: "AI chat app",
+        description:
+          "Full conversation UI with InputMessage, ThinkingSteps, and message bubbles wired up. Ideal for assistants and copilots.",
+      },
+      {
+        id: "admin",
+        title: "Admin dashboard",
+        description:
+          "Sidebar shell, sortable data tables, and form-heavy detail views. Built for back-office tools and operational apps.",
+      },
+      {
+        id: "onboarding",
+        title: "Onboarding flow",
+        description:
+          "Stepped intake using AskUserQuestions with a progress indicator and inline validation. Great for setup wizards.",
+      },
+    ],
+  },
+  {
+    id: "shape",
+    title: "Which shape language fits your brand?",
+    layout: "stacked",
+    options: [
+      {
+        id: "rounded",
+        title: "Rounded",
+        description:
+          "Soft 16–24px corners that feel approachable and read as software. Pairs well with editorial typography and dense layouts.",
+      },
+      {
+        id: "pill",
+        title: "Pill",
+        description:
+          "Fully rounded shapes that lean playful and consumer-friendly. Best when controls are sparse and breathing room is generous.",
+      },
+    ],
+  },
+  {
+    id: "components",
+    title: "Which components will you reach for first?",
+    layout: "stacked",
+    multiSelect: true,
+    nextLabel: "Continue",
+    options: [
+      {
+        id: "input",
+        title: "InputMessage",
+        description:
+          "Chat-style composer with attachments, dropdowns, and submit affordances. The backbone of any AI surface.",
+      },
+      {
+        id: "thinking",
+        title: "ThinkingSteps",
+        description:
+          "Animated, streamable reasoning steps with collapse and expand. Great for showing AI work in progress.",
+      },
+      {
+        id: "ask",
+        title: "AskUserQuestions",
+        description:
+          "This component — stepped flows with single and multi-select, optional Other, and proximity hover throughout.",
+      },
+      {
+        id: "tabs",
+        title: "TabsSubtle",
+        description:
+          "Quiet segmented tabs that morph between selections. Reach for these when section headers would be too loud.",
+      },
+      {
+        id: "nav",
+        title: "NavMenu",
+        description:
+          "Sidebar navigation with active-state morphing, grouped sections, and keyboard support out of the box.",
+      },
+    ],
+  },
+  {
+    id: "drew",
+    title: "What drew you to Fluid Functionalism?",
+    layout: "stacked",
+    allowOther: true,
+    otherPlaceholder: "Something else? Tell us in a sentence…",
+    options: [
+      {
+        id: "motion",
+        title: "Motion that feels alive",
+        description:
+          "Spring tokens, proximity hover, and morphing backgrounds make every interaction feel intentional rather than scripted.",
+      },
+      {
+        id: "craft",
+        title: "Pixel-level craft",
+        description:
+          "Every component is tuned for typography, spacing, focus rings, and dark mode — no defaults left untouched.",
+      },
+      {
+        id: "tokens",
+        title: "A token system, not just components",
+        description:
+          "Shape, elevation, color, and font-weight tokens compose cleanly so the registry scales beyond what you see.",
+      },
+    ],
+  },
+  {
+    id: "frameworks",
+    title: "Where will you ship these components?",
+    layout: "stacked",
+    multiSelect: true,
+    options: [
+      {
+        id: "next",
+        title: "Next.js (App Router)",
+        description:
+          "Server components, client islands, and route-level layouts. The primary target the registry is tuned for.",
+      },
+      {
+        id: "remix",
+        title: "Remix",
+        description:
+          "Full-stack data loading with nested routes. Most components transplant cleanly; framer-motion stays client-only.",
+      },
+      {
+        id: "vite",
+        title: "Vite + React",
+        description:
+          "Single-page apps and internal dashboards. The fastest dev loop for prototyping new flows against the registry.",
+      },
+      {
+        id: "astro",
+        title: "Astro",
+        description:
+          "Content-first sites with interactive islands. Good fit for marketing pages that need a handful of live components.",
+      },
+    ],
+  },
+  {
+    id: "theme",
+    title: "How will you handle theme mode?",
+    layout: "stacked",
+    options: [
+      {
+        id: "light",
+        title: "Light only",
+        description:
+          "Tune one palette deeply. Best when the product is consumer-facing and the brand voice is bright.",
+      },
+      {
+        id: "dark",
+        title: "Dark only",
+        description:
+          "Lean into the dark-mode aesthetic the registry was designed in. Cuts theme work in half.",
+      },
+      {
+        id: "system",
+        title: "System-aware",
+        description:
+          "Follow the OS preference automatically. No toggle UI, no user friction, and it matches what most apps do today.",
+      },
+      {
+        id: "toggle",
+        title: "User toggle",
+        description:
+          "Give users an explicit switch with persistence. The most flexible option, but it adds a small surface to design.",
+      },
+    ],
+  },
+  {
+    id: "missing",
+    title: "What's missing from the registry today?",
+    layout: "stacked",
+    multiSelect: true,
+    allowOther: true,
+    otherPlaceholder: "Tell us what to build next…",
+    nextLabel: "Send feedback",
+    options: [
+      {
+        id: "data",
+        title: "Data table",
+        description:
+          "Sortable, filterable, virtualized rows with column resizing and density modes. The most-asked-for primitive.",
+      },
+      {
+        id: "calendar",
+        title: "Calendar / date picker",
+        description:
+          "Single date, range, and inline calendar — with keyboard support and locale-aware formatting baked in.",
+      },
+      {
+        id: "command",
+        title: "Command menu",
+        description:
+          "Keyboard-first launcher with recents, grouped actions, and fuzzy matching. The connective tissue for power users.",
+      },
+    ],
+  },
+  {
+    id: "recommend",
+    title: "Would you recommend Fluid Functionalism to a teammate?",
+    layout: "stacked",
+    skippable: false,
+    options: [
+      {
+        id: "yes",
+        title: "Yes, already have",
+        description:
+          "It's clear from the first install where the bar is. You'd hand it to anyone shipping a polished React surface.",
+      },
+      {
+        id: "soon",
+        title: "Once it covers more ground",
+        description:
+          "Once the missing pieces (data table, calendar, command) land you'd recommend it without reservation.",
+      },
+      {
+        id: "unsure",
+        title: "Still evaluating",
+        description:
+          "You like the direction but want to ship one real flow against it before passing it on to others.",
+      },
+    ],
+  },
+];
+
+<AskUserQuestions questions={questions} />`;
+
 const controlledCode = `const [index, setIndex] = useState(0);
 const [answers, setAnswers] = useState({});
 
@@ -287,6 +589,7 @@ const questionProps: PropDef[] = [
   { name: "otherPlaceholder", type: "string", default: '"Describe in your own words…"', description: "Placeholder for the Other input." },
   { name: "skippable", type: "boolean", default: "true", description: "Show the Skip control in the header." },
   { name: "nextLabel", type: "string", description: "Label for the Next button in multi-select mode. Defaults to 'Next' or 'Finish'." },
+  { name: "layout", type: '"inline" | "stacked"', default: '"inline"', description: "Row layout. 'stacked' places the description on its own line under the title — use when descriptions are long enough to wrap." },
 ];
 
 const optionProps: PropDef[] = [
@@ -307,36 +610,89 @@ const answerProps: PropDef[] = [
 const exampleQuestions: AskUserQuestion[] = [
   {
     id: "role",
-    title: "What's your role?",
+    title: "How do you plan to use Fluid Functionalism?",
     options: [
-      { id: "design", title: "Designer", description: "Visual / interaction" },
-      { id: "eng", title: "Engineer", description: "Frontend / backend" },
-      { id: "pm", title: "PM", description: "Product / program" },
-      { id: "research", title: "Researcher", description: "User / market" },
+      { id: "design", title: "Designer", description: "Prototyping flows and pages" },
+      { id: "eng", title: "Engineer", description: "Shipping production UI" },
+      { id: "pm", title: "PM", description: "Aligning the team on patterns" },
+      { id: "founder", title: "Founder", description: "Bootstrapping a product" },
     ],
   },
   {
-    id: "tools",
-    title: "Which tools do you use day to day?",
+    id: "shape",
+    title: "Which shape language fits your brand?",
+    options: [
+      { id: "rounded", title: "Rounded", description: "Soft, familiar corners" },
+      { id: "pill", title: "Pill", description: "Fully rounded, friendly" },
+    ],
+  },
+  {
+    id: "components",
+    title: "Which components are you reaching for first?",
     multiSelect: true,
     options: [
-      { id: "figma", title: "Figma", description: "Design source of truth" },
-      { id: "vscode", title: "VS Code", description: "Code editor" },
-      { id: "linear", title: "Linear", description: "Issue tracker" },
-      { id: "notion", title: "Notion", description: "Docs and planning" },
+      { id: "input", title: "InputMessage", description: "Chat-style composer with attachments" },
+      { id: "thinking", title: "ThinkingSteps", description: "Streamed reasoning steps" },
+      { id: "ask", title: "AskUserQuestions", description: "Stepped question flows" },
+      { id: "tabs", title: "TabsSubtle", description: "Quiet segmented tabs" },
+      { id: "nav", title: "NavMenu", description: "Sidebar navigation" },
+    ],
+    nextLabel: "Continue",
+  },
+  {
+    id: "drew",
+    title: "What drew you to Fluid Functionalism?",
+    options: [
+      { id: "motion", title: "Motion", description: "Springs that feel alive" },
+      { id: "craft", title: "Craft", description: "Pixel-level polish" },
+      { id: "tokens", title: "Tokens", description: "Shape and elevation systems" },
+    ],
+    allowOther: true,
+    otherPlaceholder: "Something else?",
+  },
+  {
+    id: "frameworks",
+    title: "Where will you ship these components?",
+    multiSelect: true,
+    options: [
+      { id: "next", title: "Next.js", description: "App Router projects" },
+      { id: "remix", title: "Remix", description: "Full-stack apps" },
+      { id: "vite", title: "Vite + React", description: "SPAs and dashboards" },
+      { id: "astro", title: "Astro", description: "Content-first sites" },
+    ],
+  },
+  {
+    id: "themes",
+    title: "Which theme mode do you support?",
+    options: [
+      { id: "light", title: "Light only" },
+      { id: "dark", title: "Dark only" },
+      { id: "system", title: "System-aware" },
+      { id: "toggle", title: "User toggle" },
     ],
   },
   {
     id: "missing",
-    title: "What feels missing in your workflow?",
+    title: "What's missing from the registry today?",
+    multiSelect: true,
     options: [
-      { id: "speed", title: "Speed", description: "Faster iteration loop" },
-      { id: "clarity", title: "Clarity", description: "Sharper goals" },
-      { id: "alignment", title: "Alignment", description: "Same page sooner" },
-      { id: "quality", title: "Quality", description: "Higher craft bar" },
+      { id: "data", title: "Data table", description: "Sortable, filterable rows" },
+      { id: "calendar", title: "Calendar", description: "Date picker and range" },
+      { id: "command", title: "Command menu", description: "Fast keyboard launcher" },
     ],
     allowOther: true,
-    otherPlaceholder: "Something else?",
+    otherPlaceholder: "Tell us what to build next…",
+    nextLabel: "Send feedback",
+  },
+  {
+    id: "recommend",
+    title: "Would you recommend Fluid Functionalism to a teammate?",
+    skippable: false,
+    options: [
+      { id: "yes", title: "Yes", description: "Already have" },
+      { id: "soon", title: "Soon", description: "Once it covers more ground" },
+      { id: "unsure", title: "Not sure yet", description: "Still evaluating" },
+    ],
   },
 ];
 
@@ -457,6 +813,243 @@ const otherQuestions: AskUserQuestion[] = [
   },
 ];
 
+const stackedQuestions: AskUserQuestion[] = [
+  {
+    id: "template",
+    title: "Which starting template fits your project?",
+    layout: "stacked",
+    options: [
+      {
+        id: "marketing",
+        title: "Marketing site",
+        description:
+          "Polished landing page with hero, features grid, pricing table, and a footer. Best when you need to ship a story-driven page fast.",
+      },
+      {
+        id: "chat",
+        title: "AI chat app",
+        description:
+          "Full conversation UI with InputMessage, ThinkingSteps, and message bubbles wired up. Ideal for assistants and copilots.",
+      },
+      {
+        id: "admin",
+        title: "Admin dashboard",
+        description:
+          "Sidebar shell, sortable data tables, and form-heavy detail views. Built for back-office tools and operational apps.",
+      },
+      {
+        id: "onboarding",
+        title: "Onboarding flow",
+        description:
+          "Stepped intake using AskUserQuestions with a progress indicator and inline validation. Great for setup wizards.",
+      },
+    ],
+  },
+  {
+    id: "shape",
+    title: "Which shape language fits your brand?",
+    layout: "stacked",
+    options: [
+      {
+        id: "rounded",
+        title: "Rounded",
+        description:
+          "Soft 16–24px corners that feel approachable and read as software. Pairs well with editorial typography and dense layouts.",
+      },
+      {
+        id: "pill",
+        title: "Pill",
+        description:
+          "Fully rounded shapes that lean playful and consumer-friendly. Best when controls are sparse and breathing room is generous.",
+      },
+    ],
+  },
+  {
+    id: "components",
+    title: "Which components will you reach for first?",
+    layout: "stacked",
+    multiSelect: true,
+    nextLabel: "Continue",
+    options: [
+      {
+        id: "input",
+        title: "InputMessage",
+        description:
+          "Chat-style composer with attachments, dropdowns, and submit affordances. The backbone of any AI surface.",
+      },
+      {
+        id: "thinking",
+        title: "ThinkingSteps",
+        description:
+          "Animated, streamable reasoning steps with collapse and expand. Great for showing AI work in progress.",
+      },
+      {
+        id: "ask",
+        title: "AskUserQuestions",
+        description:
+          "This component — stepped flows with single and multi-select, optional Other, and proximity hover throughout.",
+      },
+      {
+        id: "tabs",
+        title: "TabsSubtle",
+        description:
+          "Quiet segmented tabs that morph between selections. Reach for these when section headers would be too loud.",
+      },
+      {
+        id: "nav",
+        title: "NavMenu",
+        description:
+          "Sidebar navigation with active-state morphing, grouped sections, and keyboard support out of the box.",
+      },
+    ],
+  },
+  {
+    id: "drew",
+    title: "What drew you to Fluid Functionalism?",
+    layout: "stacked",
+    allowOther: true,
+    otherPlaceholder: "Something else? Tell us in a sentence…",
+    options: [
+      {
+        id: "motion",
+        title: "Motion that feels alive",
+        description:
+          "Spring tokens, proximity hover, and morphing backgrounds make every interaction feel intentional rather than scripted.",
+      },
+      {
+        id: "craft",
+        title: "Pixel-level craft",
+        description:
+          "Every component is tuned for typography, spacing, focus rings, and dark mode — no defaults left untouched.",
+      },
+      {
+        id: "tokens",
+        title: "A token system, not just components",
+        description:
+          "Shape, elevation, color, and font-weight tokens compose cleanly so the registry scales beyond what you see.",
+      },
+    ],
+  },
+  {
+    id: "frameworks",
+    title: "Where will you ship these components?",
+    layout: "stacked",
+    multiSelect: true,
+    options: [
+      {
+        id: "next",
+        title: "Next.js (App Router)",
+        description:
+          "Server components, client islands, and route-level layouts. The primary target the registry is tuned for.",
+      },
+      {
+        id: "remix",
+        title: "Remix",
+        description:
+          "Full-stack data loading with nested routes. Most components transplant cleanly; framer-motion stays client-only.",
+      },
+      {
+        id: "vite",
+        title: "Vite + React",
+        description:
+          "Single-page apps and internal dashboards. The fastest dev loop for prototyping new flows against the registry.",
+      },
+      {
+        id: "astro",
+        title: "Astro",
+        description:
+          "Content-first sites with interactive islands. Good fit for marketing pages that need a handful of live components.",
+      },
+    ],
+  },
+  {
+    id: "theme",
+    title: "How will you handle theme mode?",
+    layout: "stacked",
+    options: [
+      {
+        id: "light",
+        title: "Light only",
+        description:
+          "Tune one palette deeply. Best when the product is consumer-facing and the brand voice is bright.",
+      },
+      {
+        id: "dark",
+        title: "Dark only",
+        description:
+          "Lean into the dark-mode aesthetic the registry was designed in. Cuts theme work in half.",
+      },
+      {
+        id: "system",
+        title: "System-aware",
+        description:
+          "Follow the OS preference automatically. No toggle UI, no user friction, and it matches what most apps do today.",
+      },
+      {
+        id: "toggle",
+        title: "User toggle",
+        description:
+          "Give users an explicit switch with persistence. The most flexible option, but it adds a small surface to design.",
+      },
+    ],
+  },
+  {
+    id: "missing",
+    title: "What's missing from the registry today?",
+    layout: "stacked",
+    multiSelect: true,
+    allowOther: true,
+    otherPlaceholder: "Tell us what to build next…",
+    nextLabel: "Send feedback",
+    options: [
+      {
+        id: "data",
+        title: "Data table",
+        description:
+          "Sortable, filterable, virtualized rows with column resizing and density modes. The most-asked-for primitive.",
+      },
+      {
+        id: "calendar",
+        title: "Calendar / date picker",
+        description:
+          "Single date, range, and inline calendar — with keyboard support and locale-aware formatting baked in.",
+      },
+      {
+        id: "command",
+        title: "Command menu",
+        description:
+          "Keyboard-first launcher with recents, grouped actions, and fuzzy matching. The connective tissue for power users.",
+      },
+    ],
+  },
+  {
+    id: "recommend",
+    title: "Would you recommend Fluid Functionalism to a teammate?",
+    layout: "stacked",
+    skippable: false,
+    options: [
+      {
+        id: "yes",
+        title: "Yes, already have",
+        description:
+          "It's clear from the first install where the bar is. You'd hand it to anyone shipping a polished React surface.",
+      },
+      {
+        id: "soon",
+        title: "Once it covers more ground",
+        description:
+          "Once the missing pieces (data table, calendar, command) land you'd recommend it without reservation.",
+      },
+      {
+        id: "unsure",
+        title: "Still evaluating",
+        description:
+          "You like the direction but want to ship one real flow against it before passing it on to others.",
+      },
+    ],
+  },
+];
+
 const skipQuestions: AskUserQuestion[] = [
   {
     id: "experience",
@@ -499,7 +1092,11 @@ export default function AskUserQuestionsDoc() {
       description="Stepped question flow with 2–5 options, single or multi-select, inline 'other' input, optional skip, and multi-question navigation."
     >
       <DocSection title="Example">
-        <ReplayableExample code={exampleCode}>
+        <ReplayableExample
+          code={exampleCode}
+          align="bottom"
+          minHeightClass="min-h-[560px]"
+        >
           {(k) => <AskUserQuestions key={k} questions={exampleQuestions} />}
         </ReplayableExample>
       </DocSection>
@@ -525,6 +1122,16 @@ export default function AskUserQuestionsDoc() {
       <DocSection title="Skippable">
         <ReplayableExample code={skipCode}>
           {(k) => <AskUserQuestions key={k} questions={skipQuestions} />}
+        </ReplayableExample>
+      </DocSection>
+
+      <DocSection title="Stacked layout">
+        <ReplayableExample
+          code={stackedCode}
+          align="bottom"
+          minHeightClass="min-h-[640px]"
+        >
+          {(k) => <AskUserQuestions key={k} questions={stackedQuestions} />}
         </ReplayableExample>
       </DocSection>
 

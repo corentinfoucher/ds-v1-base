@@ -30,6 +30,8 @@ interface ComponentPreviewProps {
    *  Useful when a demo opens floating UI (popovers, dropdowns) that needs
    *  vertical room. */
   minHeightClass?: string;
+  /** Vertical alignment of the preview content. Defaults to "center". */
+  align?: "center" | "bottom";
   children: ReactNode;
 }
 
@@ -40,6 +42,7 @@ export function ComponentPreview({
   playbackButton,
   padding = "default",
   minHeightClass = "min-h-[120px]",
+  align = "center",
   children,
 }: ComponentPreviewProps) {
   const [tab, setTab] = useState(0);
@@ -85,7 +88,7 @@ export function ComponentPreview({
       {/* Content */}
       {tab === 0 ? (
         <div
-          className={`flex items-center justify-center ${minHeightClass} bg-background ${
+          className={`flex ${align === "bottom" ? "items-end" : "items-center"} justify-center ${minHeightClass} bg-background ${
             padding === "compact" ? "px-4 py-4" : "px-8 py-12"
           }`}
         >

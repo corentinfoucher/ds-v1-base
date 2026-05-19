@@ -38,17 +38,7 @@ export function useProximityHover<T extends HTMLElement>(
   const itemRectsRef = useRef<ItemRect[]>([]);
   const sessionRef = useRef(0);
   const rafIdRef = useRef<number | null>(null);
-
-  const registerItem = useCallback(
-    (index: number, element: HTMLElement | null) => {
-      if (element) {
-        itemsRef.current.set(index, element);
-      } else {
-        itemsRef.current.delete(index);
-      }
-    },
-    []
-  );
+  const remeasureRafIdRef = useRef<number | null>(null);
 
   const measureItems = useCallback(() => {
     const container = containerRef.current;
@@ -70,6 +60,28 @@ export function useProximityHover<T extends HTMLElement>(
     itemRectsRef.current = rects;
     setItemRects(rects);
   }, [containerRef]);
+
+  const registerItem = useCallback(
+    (index: number, element: HTMLElement | null) => {
+      if (element) {
+        itemsRef.current.set(index, element);
+      } else {
+        itemsRef.current.delete(index);
+      }
+      // Coalesce rapid register/unregister calls (e.g. when an AnimatePresence
+      // remounts a list of rows) into a single remeasure on the next frame,
+      // so consumers don't have to manually call measureItems after the
+      // container's children swap.
+      if (remeasureRafIdRef.current !== null) {
+        cancelAnimationFrame(remeasureRafIdRef.current);
+      }
+      remeasureRafIdRef.current = requestAnimationFrame(() => {
+        remeasureRafIdRef.current = null;
+        measureItems();
+      });
+    },
+    [measureItems]
+  );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
@@ -150,6 +162,9 @@ export function useProximityHover<T extends HTMLElement>(
     return () => {
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current);
+      }
+      if (remeasureRafIdRef.current !== null) {
+        cancelAnimationFrame(remeasureRafIdRef.current);
       }
     };
   }, []);

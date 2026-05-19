@@ -35,6 +35,11 @@ export interface AskUserQuestion {
   otherPlaceholder?: string;
   skippable?: boolean;
   nextLabel?: string;
+  /** Visual layout for each option row.
+   *  - "inline" (default): title and description on one line.
+   *  - "stacked": title above, description below — useful when descriptions
+   *    are long enough to wrap. */
+  layout?: "inline" | "stacked";
 }
 
 export interface AskUserAnswer {
@@ -285,6 +290,10 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
       goNext(answers);
     }, [goNext, answers]);
 
+    const handleBack = useCallback(() => {
+      if (safeIndex > 0) setIndex(safeIndex - 1);
+    }, [safeIndex, setIndex]);
+
     // ── Keyboard shortcuts: 1-9 ──────────────────────────────────
     useEffect(() => {
       if (!question) return;
@@ -375,13 +384,17 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
     // The Other row gets its own input-field-style indicator (see below) and
     // is intentionally excluded here so it doesn't merge into a contiguous
     // bg-accent block with adjacent selected options.
+    // Include the Other row in selectedIndices when it has text. This lets
+    // it merge into the same morphing bg block as adjacent selected options
+    // (instead of looking like a disconnected input field next to them).
     const selectedIndices = useMemo(() => {
       const set = new Set<number>();
       options.forEach((opt, i) => {
         if (selectedIds.includes(optionKey(opt, i))) set.add(i);
       });
+      if (allowOther && otherText.length > 0) set.add(otherIndex);
       return set;
-    }, [options, selectedIds]);
+    }, [options, selectedIds, allowOther, otherText, otherIndex]);
 
     const selectedGroups = useMemo(() => {
       const runs: { start: number; end: number }[] = [];
@@ -420,8 +433,9 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
     const isHoveringNonSelected =
       activeIndex !== null && !selectedIndices.has(activeIndex);
 
-    const showFooter = (total > 1 && isSkippable) || isMulti;
+    const showBack = total > 1 && safeIndex > 0;
     const showSkip = total > 1 && isSkippable;
+    const showFooter = showBack || showSkip || isMulti;
 
     return (
       <div
@@ -433,24 +447,32 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
         )}
         {...rest}
       >
-        <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          layout
+          transition={springs.slow}
+          className="flex flex-col gap-3.5 px-4 sm:px-5 pt-4 sm:pt-5 pb-2.5 sm:pb-3 overflow-hidden"
+        >
+          {/* Header — persistent, lives outside the per-question content
+              remount so the "Question N of N" counter stays in place while
+              only its number morphs as the question changes. */}
+          <div className="flex items-center text-[12px] text-muted-foreground">
+            <span>
+              Question {safeIndex + 1} of {total}
+            </span>
+          </div>
+
+          {/* No AnimatePresence: the question content remounts on qId via
+              the motion.div key. Old content disappears the same commit the
+              parent's layout spring starts, so the height change and the
+              opacity ramp on the new content are driven by the exact same
+              render — no popLayout reconciliation frame between them. */}
           <motion.div
             key={qId}
-            initial={
-              hasMounted.current ? { opacity: 0, y: 6 } : { opacity: 1, y: 0 }
-            }
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6, transition: { duration: 0.1 } }}
-            transition={springs.moderate}
-            className="flex flex-col gap-3.5 p-4 sm:p-5"
+            initial={hasMounted.current ? { opacity: 0 } : { opacity: 1 }}
+            animate={{ opacity: 1 }}
+            transition={springs.slow}
+            className="flex flex-col gap-3.5"
           >
-            {/* Header */}
-            <div className="flex items-center text-[12px] text-muted-foreground">
-              <span>
-                Question {safeIndex + 1} of {total}
-              </span>
-            </div>
-
             {/* Question title */}
             <h3
               id={`${reactId}-${qId}-title`}
@@ -470,19 +492,18 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
               onMouseLeave={handlers.onMouseLeave}
               className="relative flex flex-col gap-0.5 -mx-3"
             >
-              {/* Other-row input-style background (matches InputGroup's
-                  focused field: bg-card with a 1px inset ring). Shown whenever
-                  the Other input is focused or has any text. Rendered before
-                  the merged selection bg so options' bg-accent stays on top
-                  if they ever overlap (they shouldn't — Other is excluded
-                  from selectedIndices). */}
+              {/* Other-row input hint — shown only when the Other input is
+                  focused and still empty, to signal "type here". As soon as
+                  text exists, the row joins selectedIndices and inherits the
+                  selected merged bg, so it visually integrates with adjacent
+                  selected options instead of looking like a standalone field. */}
               <AnimatePresence>
                 {(() => {
                   if (!allowOther) return null;
                   const otherRect = itemRects[otherIndex];
-                  const otherActive =
-                    focusedIndex === otherIndex || otherText.length > 0;
-                  if (!otherRect || !otherActive) return null;
+                  const isEmptyFocused =
+                    focusedIndex === otherIndex && otherText.length === 0;
+                  if (!otherRect || !isEmptyFocused) return null;
                   return (
                     <motion.div
                       key="other-input"
@@ -515,44 +536,8 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
                 })()}
               </AnimatePresence>
 
-              {/* Selected-row backgrounds (merged for contiguous selections) */}
-              <AnimatePresence>
-                {selectedGroups.map((group) => {
-                  const startRect = itemRects[group.start];
-                  const endRect = itemRects[group.end];
-                  if (!startRect || !endRect) return null;
-                  const mergedTop = startRect.top;
-                  const mergedHeight =
-                    endRect.top + endRect.height - startRect.top;
-                  const mergedLeft = Math.min(startRect.left, endRect.left);
-                  const mergedWidth = Math.max(startRect.width, endRect.width);
-                  return (
-                    <motion.div
-                      key={`selected-${group.id}`}
-                      aria-hidden
-                      className={cn(
-                        "absolute pointer-events-none bg-accent",
-                        shape.mergedBg
-                      )}
-                      initial={false}
-                      animate={{
-                        top: mergedTop,
-                        left: mergedLeft,
-                        width: mergedWidth,
-                        height: mergedHeight,
-                        opacity: isHoveringNonSelected ? 0.8 : 1,
-                      }}
-                      exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                      transition={{
-                        ...springs.moderate,
-                        opacity: { duration: 0.08 },
-                      }}
-                    />
-                  );
-                })}
-              </AnimatePresence>
-
-              {/* Single morphing hover indicator */}
+              {/* Single morphing hover indicator (rendered below selected bg
+                  so a hovered+selected row still reads as clearly selected) */}
               <AnimatePresence>
                 {activeRect && (
                   <motion.div
@@ -583,6 +568,46 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
                     }}
                   />
                 )}
+              </AnimatePresence>
+
+              {/* Selected-row backgrounds (merged for contiguous selections).
+                  Uses bg-active (overlay-aware) to match CheckboxGroup, and
+                  renders ABOVE the hover indicator so the selected state stays
+                  readable when the user mouses over a selected row. */}
+              <AnimatePresence>
+                {selectedGroups.map((group) => {
+                  const startRect = itemRects[group.start];
+                  const endRect = itemRects[group.end];
+                  if (!startRect || !endRect) return null;
+                  const mergedTop = startRect.top;
+                  const mergedHeight =
+                    endRect.top + endRect.height - startRect.top;
+                  const mergedLeft = Math.min(startRect.left, endRect.left);
+                  const mergedWidth = Math.max(startRect.width, endRect.width);
+                  return (
+                    <motion.div
+                      key={`selected-${group.id}`}
+                      aria-hidden
+                      className={cn(
+                        "absolute pointer-events-none bg-active",
+                        shape.mergedBg
+                      )}
+                      initial={false}
+                      animate={{
+                        top: mergedTop,
+                        left: mergedLeft,
+                        width: mergedWidth,
+                        height: mergedHeight,
+                        opacity: isHoveringNonSelected ? 0.8 : 1,
+                      }}
+                      exit={{ opacity: 0, transition: { duration: 0.12 } }}
+                      transition={{
+                        ...springs.moderate,
+                        opacity: { duration: 0.08 },
+                      }}
+                    />
+                  );
+                })}
               </AnimatePresence>
 
               {/* Single morphing focus ring */}
@@ -660,6 +685,7 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
                     chipFilled={isSelected}
                     isMulti={isMulti}
                     showArrow={showArrow}
+                    bodyLayout={question.layout === "stacked" ? "stacked" : "inline"}
                     arrowIcon={
                       <ArrowRight
                         size={14}
@@ -668,26 +694,46 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
                       />
                     }
                   >
-                    <span>
-                      <span
-                        className="text-foreground transition-colors duration-80"
-                        style={{
-                          fontVariationSettings: isSelected
-                            ? fontWeights.semibold
-                            : fontWeights.medium,
-                        }}
-                      >
-                        {opt.title}
-                      </span>
-                      {opt.description && (
-                        <>
-                          {" "}
-                          <span className="text-muted-foreground">
+                    {question.layout === "stacked" ? (
+                      <>
+                        <span
+                          className="text-foreground transition-colors duration-80"
+                          style={{
+                            fontVariationSettings: isSelected
+                              ? fontWeights.semibold
+                              : fontWeights.medium,
+                          }}
+                        >
+                          {opt.title}
+                        </span>
+                        {opt.description && (
+                          <span className="text-[12px] text-muted-foreground leading-snug">
                             {opt.description}
                           </span>
-                        </>
-                      )}
-                    </span>
+                        )}
+                      </>
+                    ) : (
+                      <span>
+                        <span
+                          className="text-foreground transition-colors duration-80"
+                          style={{
+                            fontVariationSettings: isSelected
+                              ? fontWeights.semibold
+                              : fontWeights.medium,
+                          }}
+                        >
+                          {opt.title}
+                        </span>
+                        {opt.description && (
+                          <>
+                            {" "}
+                            <span className="text-muted-foreground">
+                              {opt.description}
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    )}
                   </Row>
                 );
               })}
@@ -767,10 +813,21 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
                 </Row>
               )}
             </div>
+          </motion.div>
 
-            {/* Footer */}
-            {showFooter && (
-              <div className="flex items-center justify-end gap-2 pt-1">
+          {/* Footer — lives outside the per-question content remount so the
+              action row stays put while the question content cross-fades.
+              Buttons appear/disappear directly; their swap is the morph. */}
+          {showFooter && (
+            <div className="flex items-center justify-between gap-2 -mx-2 sm:-mx-3">
+              <div className="flex items-center gap-2">
+                {showBack && (
+                  <Button variant="ghost" size="sm" onClick={handleBack}>
+                    Back
+                  </Button>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 {showSkip && (
                   <Button variant="ghost" size="sm" onClick={handleSkip}>
                     {skipLabel}
@@ -792,9 +849,9 @@ const AskUserQuestions = forwardRef<HTMLDivElement, AskUserQuestionsProps>(
                   </Button>
                 )}
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+            </div>
+          )}
+        </motion.div>
       </div>
     );
   }
@@ -823,6 +880,9 @@ interface RowProps {
   showArrow?: boolean;
   arrowIcon?: React.ReactNode;
   onArrowClick?: () => void;
+  /** Body content layout. "inline" keeps title + description on one line;
+   *  "stacked" puts description below the title with extra vertical padding. */
+  bodyLayout?: "inline" | "stacked";
   children: React.ReactNode;
 }
 
@@ -844,6 +904,7 @@ function Row({
   showArrow,
   arrowIcon,
   onArrowClick,
+  bodyLayout = "inline",
   children,
   ...aria
 }: RowProps) {
@@ -872,7 +933,8 @@ function Row({
       onClick={onClick}
       onKeyDown={onKeyDown}
       className={cn(
-        "relative z-10 flex items-center gap-3 px-3 min-h-10 py-1.5 cursor-pointer select-none outline-none",
+        "relative z-10 flex items-center gap-3 pl-3 pr-1.5 cursor-pointer select-none outline-none",
+        bodyLayout === "stacked" ? "min-h-14 py-2" : "min-h-10 py-1.5",
         shape.item
       )}
     >
@@ -881,7 +943,14 @@ function Row({
           selectedGroups / merged-bg block). Row keeps z-10 to sit above it. */}
 
       {/* Body — left, fills row */}
-      <span className="min-w-0 flex-1 text-[13px] leading-snug inline-flex items-center gap-0">
+      <span
+        className={cn(
+          "min-w-0 flex-1 text-[13px] leading-snug",
+          bodyLayout === "stacked"
+            ? "flex flex-col gap-0.5"
+            : "inline-flex items-center gap-0"
+        )}
+      >
         {children}
       </span>
 
