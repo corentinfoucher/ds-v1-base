@@ -69,8 +69,8 @@ export function Footer({
                     {col.title}
                   </span>
                   <ul className="flex flex-col gap-2">
-                    {col.links.map((link) => (
-                      <li key={link.href}>
+                    {col.links.map((link, j) => (
+                      <li key={`${link.label}-${j}`}>
                         <a
                           href={link.href}
                           className="text-sm transition-opacity hover:opacity-100"
