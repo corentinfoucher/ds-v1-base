@@ -22,12 +22,30 @@ export function Sidebar({ mobile }: SidebarProps) {
           ? "w-full"
           : "sticky top-0 h-screen hidden lg:flex"
       )}
+      style={
+        !mobile
+          ? {
+              background: "var(--surface-2)",
+              borderRight: "1px solid var(--border)",
+            }
+          : undefined
+      }
     >
       {/* Top-level navigation */}
       <NavMenu activeSlug={pathname === "/" ? "/" : pathname === "/docs" ? "/docs" : null} aria-label="Main navigation">
         <NavItem index={0} href="/" label="Showcase" />
         <NavItem index={1} href="/docs" label="Introduction" />
       </NavMenu>
+
+      {/* Sections */}
+      <div>
+        <span className="text-[13px] text-muted-foreground/50 pl-1 pb-1.5 flex items-center gap-2">
+          Sections
+        </span>
+        <NavMenu activeSlug={pathname} aria-label="Sections navigation">
+          <NavItem index={0} href="/showcase" label="Showcase" />
+        </NavMenu>
+      </div>
 
       {/* System section */}
       <div>

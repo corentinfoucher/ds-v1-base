@@ -11,11 +11,11 @@
 
 :root {
   /* ── Surfaces (8-level ladder) ──
-     Light: 2 color steps (floor, sunken) then flat #FFFFFF; shadow does the work.
+     Light: perceptible gray steps; shadow reinforces elevation.
      Dark: additive white-opacity ladder over #171717.
      Each surface pairs 1:1 with a shadow recipe (--shadow-1 .. --shadow-8). */
-  --surface-1: #FAFAFA;
-  --surface-2: #FCFCFC;
+  --surface-1: #F5F5F5;
+  --surface-2: #EBEBEB;
   --surface-3: #FFFFFF;
   --surface-4: #FFFFFF;
   --surface-5: #FFFFFF;
@@ -51,6 +51,15 @@
   --border: color-mix(in oklab, var(--foreground) 12%, transparent);
   --ring: #E5E5E5;
   --input: #E5E5E5;
+
+  /* Primary — neutral, mirrors foreground. Brand color defined at project level. */
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+
+  /* Inverted surface — dark charcoal for hero/footer dark sections */
+  --surface-inverse: #1C1C1E;
+  --surface-inverse-muted: rgba(255,255,255,0.55);
+  --surface-inverse-border: rgba(255,255,255,0.12);
 
   /* Error / Destructive */
   --destructive: #EF4444;
@@ -125,6 +134,12 @@
     --ring: #404040;
     --input: #404040;
 
+    --primary: var(--foreground);
+    --primary-foreground: var(--background);
+    --surface-inverse: #0A0A0A;
+    --surface-inverse-muted: rgba(255,255,255,0.5);
+    --surface-inverse-border: rgba(255,255,255,0.1);
+
     --destructive: #F87171;
     --destructive-light: #450A0A;
 
@@ -148,8 +163,8 @@
 }
 
 .light {
-  --surface-1: #FAFAFA;
-  --surface-2: #FCFCFC;
+  --surface-1: #F5F5F5;
+  --surface-2: #EBEBEB;
   --surface-3: #FFFFFF;
   --surface-4: #FFFFFF;
   --surface-5: #FFFFFF;
@@ -180,6 +195,12 @@
 
   --ring: #E5E5E5;
   --input: #E5E5E5;
+
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+  --surface-inverse: #1C1C1E;
+  --surface-inverse-muted: rgba(255,255,255,0.55);
+  --surface-inverse-border: rgba(255,255,255,0.12);
 
   --destructive: #EF4444;
   --destructive-light: #FEF2F2;
@@ -235,11 +256,17 @@
   --ring: #404040;
   --input: #404040;
 
-  --destructive: #F87171;
-  --destructive-light: #450A0A;
+    --primary: var(--foreground);
+    --primary-foreground: var(--background);
+    --surface-inverse: #0A0A0A;
+    --surface-inverse-muted: rgba(255,255,255,0.5);
+    --surface-inverse-border: rgba(255,255,255,0.1);
 
-  --checker-a: #1f1f1f;
-  --checker-b: #2a2a2a;
+    --destructive: #F87171;
+    --destructive-light: #450A0A;
+
+    --checker-a: #1f1f1f;
+    --checker-b: #2a2a2a;
 
   --overlay: 255 255 255;
   --hover: rgb(var(--overlay) / 0.06);
@@ -292,6 +319,7 @@
      ESLint enforces this. */
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-surface-inverse: var(--surface-inverse);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-popover: var(--popover);

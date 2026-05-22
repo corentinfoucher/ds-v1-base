@@ -30,3 +30,8 @@ globals.css        → tokens (source of truth)
 ## Deploy
 Vercel : ds-v1-base.vercel.app
 GitHub : github.com/corentinfoucher/ds-v1-base
+
+## Références
+- **Relume** (relume.io/react) — source pour les sections React : variantes, structure, patterns
+- **Mobbin** (mobbin.com) — source d'inspiration visuelle et UX : screenshots d'apps réelles
+Workflow : screenshot Relume/Mobbin → passer à Cursor → adapter aux tokens DS V1
